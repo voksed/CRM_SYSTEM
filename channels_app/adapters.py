@@ -1,20 +1,14 @@
-import requests
+from aiogram import Bot
+from asgiref.sync import async_to_sync
 
 from .models import Activity
 
 
 class ChannelNotConnected(Exception):
-    """Канал определён архитектурно, но реальный провайдер не подключён."""
+    """Telegram-бот не подключён или отклонил запрос."""
 
 
-class MessagingChannel:
-    channel_code = None
-
-    def send(self, contact, text: str) -> bool:
-        raise NotImplementedError
-
-
-class TelegramChannel(MessagingChannel):
+class TelegramChannel:
     channel_code = Activity.Channel.TELEGRAM
 
     def __init__(self, organization):
@@ -27,55 +21,42 @@ class TelegramChannel(MessagingChannel):
         if not contact.telegram_chat_id:
             raise ChannelNotConnected("У контакта нет привязанного Telegram-чата.")
 
-        response = requests.post(
-            f"https://api.telegram.org/bot{account.bot_token}/sendMessage",
-            json={"chat_id": contact.telegram_chat_id, "text": text},
-            timeout=10,
-        )
-        return response.ok
+        async def _send():
+            bot = Bot(token=account.bot_token)
+            try:
+                await bot.send_message(chat_id=contact.telegram_chat_id, text=text)
+            finally:
+                await bot.session.close()
 
-
-class WhatsAppChannel(MessagingChannel):
-    channel_code = Activity.Channel.WHATSAPP
-
-    def send(self, contact, text: str) -> bool:
-        raise ChannelNotConnected(
-            "WhatsApp Business API требует верификации бизнеса в Meta — "
-            "не подключено в рамках дипломного проекта. Реализуйте send() здесь "
-            "при подключении провайдера (архитектура уже готова к этому)."
-        )
-
-
-class VKChannel(MessagingChannel):
-    channel_code = Activity.Channel.VK
-
-    def send(self, contact, text: str) -> bool:
-        raise ChannelNotConnected(
-            "Интеграция с VK API требует регистрации сообщества/приложения — "
-            "не подключено в рамках дипломного проекта."
-        )
-
-
-class PhoneChannel(MessagingChannel):
-    channel_code = Activity.Channel.PHONE
-
-    def send(self, contact, text: str) -> bool:
-        raise ChannelNotConnected(
-            "Телефония требует подключения SIP/облачной АТС провайдера — "
-            "не подключено в рамках дипломного проекта."
-        )
-
-
-_ADAPTERS = {
-    Activity.Channel.TELEGRAM: TelegramChannel,
-    Activity.Channel.WHATSAPP: WhatsAppChannel,
-    Activity.Channel.VK: VKChannel,
-    Activity.Channel.PHONE: PhoneChannel,
-}
+        try:
+            async_to_sync(_send)()
+        except ChannelNotConnected:
+            raise
+        except Exception as exc:
+            raise ChannelNotConnected(f"Telegram API отклонил сообщение: {exc}") from exc
+        return True
 
 
 def get_channel(channel_code, organization):
-    adapter_cls = _ADAPTERS.get(channel_code)
-    if adapter_cls is None:
-        raise ChannelNotConnected(f"Неизвестный канал: {channel_code}")
-    return adapter_cls(organization) if channel_code == Activity.Channel.TELEGRAM else adapter_cls()
+    if channel_code != Activity.Channel.TELEGRAM:
+        raise ChannelNotConnected(f"Отправка через канал «{channel_code}» не поддерживается.")
+    return TelegramChannel(organization)
+
+
+def verify_bot_token(token: str) -> str:
+    """Проверяет токен через Telegram API (getMe) и возвращает username бота.
+    Бросает ChannelNotConnected, если токен недействителен."""
+
+    async def _get_me():
+        bot = Bot(token=token)
+        try:
+            me = await bot.get_me()
+        finally:
+            await bot.session.close()
+        return me
+
+    try:
+        me = async_to_sync(_get_me)()
+    except Exception as exc:
+        raise ChannelNotConnected(f"Telegram отклонил токен: {exc}") from exc
+    return me.username

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load accounts_extras %}
+
+{% block title %}Telegram{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Telegram-переписки</h2>
+</div>
+
+{% if contacts %}
+<ul class="plain-list">
+  {% for contact in contacts %}
+  <li>
+    <a href="{% url 'contact_detail' contact.id %}#chat" class="table__person" style="justify-content: space-between; align-items: flex-start;">
+      <span style="display:flex; align-items:center; gap:8px;">
+        <span class="avatar avatar--sm">{{ contact|initials }}</span>
+        <span>
+          <div>{{ contact.full_name }}</div>
+          <div class="muted" style="font-weight:400; font-size:12.5px;">
+            {% if contact.last_message_direction == "in" %}Клиент: {% else %}Вы: {% endif %}
+            {{ contact.last_message_text|default:"нет сообщений"|truncatechars:60 }}
+          </div>
+        </span>
+      </span>
+      {% if contact.last_message_at %}
+      <span class="muted" style="font-size:12px; white-space:nowrap;">{{ contact.last_message_at|date:"d.m H:i" }}</span>
+      {% endif %}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty-state">
+  <svg class="empty-state__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+  <div class="empty-state__text">Пока нет ни одной переписки в Telegram.</div>
+</div>
+{% endif %}
+{% endblock %}

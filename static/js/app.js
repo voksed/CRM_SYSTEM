@@ -46,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initPasswordToggles();
   initThemeToggle();
   initPasswordGenerator();
+  initTelegramChat();
 });
 
 function initThemeToggle() {
@@ -208,4 +209,52 @@ function initKanbanFade(board) {
   update();
   board.addEventListener("scroll", update);
   window.addEventListener("resize", update);
+}
+
+function initTelegramChat() {
+  const chat = document.getElementById("js-chat");
+  if (!chat) return;
+
+  chat.scrollTop = chat.scrollHeight;
+
+  const contactId = chat.dataset.contactId;
+  let lastId = parseInt(chat.dataset.lastId, 10) || 0;
+
+  async function poll() {
+    let response;
+    try {
+      response = await fetch(`/contacts/${contactId}/telegram/messages.json?after_id=${lastId}`);
+    } catch (err) {
+      return;
+    }
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!data.messages.length) return;
+
+    const emptyHint = document.getElementById("js-chat-empty");
+    if (emptyHint) emptyHint.remove();
+
+    data.messages.forEach((message) => {
+      const bubble = document.createElement("div");
+      bubble.className = `chat__bubble chat__bubble--${message.direction}`;
+
+      const text = document.createElement("div");
+      text.className = "chat__text";
+      text.textContent = message.text;
+
+      const time = document.createElement("div");
+      time.className = "chat__time";
+      time.textContent = message.created_at;
+
+      bubble.appendChild(text);
+      bubble.appendChild(time);
+      chat.appendChild(bubble);
+      lastId = message.id;
+    });
+
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  setInterval(poll, 6000);
 }

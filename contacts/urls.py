@@ -10,4 +10,9 @@ urlpatterns = [
     path("<int:contact_id>/delete/", views.contact_delete, name="contact_delete"),
     path("<int:contact_id>/log/", views.contact_log_activity, name="contact_log_activity"),
     path("<int:contact_id>/send/", views.contact_send_message, name="contact_send_message"),
+    path(
+        "<int:contact_id>/telegram/messages.json",
+        views.contact_telegram_messages_json,
+        name="contact_telegram_messages_json",
+    ),
 ]

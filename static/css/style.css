@@ -1023,6 +1023,63 @@ button {
   font-size: 13.5px;
 }
 
+/* Telegram chat */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 440px;
+  overflow-y: auto;
+  padding: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+
+.chat__bubble {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  box-shadow: var(--shadow-sm);
+}
+
+.chat__bubble--in {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+}
+
+.chat__bubble--out {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+  border-bottom-right-radius: 3px;
+}
+
+.chat__text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat__time {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 4px;
+  text-align: right;
+}
+
+.chat__bubble--out .chat__time {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.chat__form {
+  margin-bottom: 0;
+}
+
 /* Kanban */
 
 .kanban-wrap {

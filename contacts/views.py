@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -7,6 +8,7 @@ from accounts.services import get_or_create_organization
 from audit.models import AuditLog
 from audit.services import get_client_ip, log_action
 from channels_app.forms import LogActivityForm, SendMessageForm
+from channels_app.models import Activity
 from channels_app.services import send_message
 
 from .forms import ContactForm
@@ -97,7 +99,12 @@ def contact_detail(request, contact_id):
     contacts = scope_to_owner_field(Contact.objects.filter(organization=org), request.user)
     contact = get_object_or_404(contacts, pk=contact_id)
 
-    activities = contact.activities.select_related("created_by")
+    chat_messages = contact.activities.filter(channel=Activity.Channel.TELEGRAM).order_by(
+        "created_at"
+    )
+    activity_log = contact.activities.exclude(channel=Activity.Channel.TELEGRAM).select_related(
+        "created_by"
+    )
     deals = contact.deals.select_related("stage")
     tasks = contact.tasks.filter(is_done=False).order_by("due_at")
 
@@ -106,7 +113,8 @@ def contact_detail(request, contact_id):
 
     context = {
         "contact": contact,
-        "activities": activities,
+        "chat_messages": chat_messages,
+        "activity_log": activity_log,
         "deals": deals,
         "tasks": tasks,
         "log_form": log_form,
@@ -139,5 +147,31 @@ def contact_send_message(request, contact_id):
     contact = get_object_or_404(contacts, pk=contact_id)
     form = SendMessageForm(data=request.POST)
     if form.is_valid():
-        send_message(org, contact, form.cleaned_data["channel"], form.cleaned_data["text"], request.user)
+        send_message(
+            org, contact, Activity.Channel.TELEGRAM, form.cleaned_data["text"], request.user
+        )
     return redirect("contact_detail", contact_id=contact.id)
+
+
+@login_required
+def contact_telegram_messages_json(request, contact_id):
+    org = get_or_create_organization(request.user)
+    contacts = scope_to_owner_field(Contact.objects.filter(organization=org), request.user)
+    contact = get_object_or_404(contacts, pk=contact_id)
+
+    messages = contact.activities.filter(channel=Activity.Channel.TELEGRAM).order_by("created_at")
+    after_id = request.GET.get("after_id")
+    if after_id:
+        messages = messages.filter(id__gt=after_id)
+
+    return JsonResponse({
+        "messages": [
+            {
+                "id": message.id,
+                "direction": message.direction,
+                "text": message.text,
+                "created_at": message.created_at.strftime("%d.%m %H:%M"),
+            }
+            for message in messages
+        ]
+    })

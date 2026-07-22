@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Activity
+from .models import Activity, TelegramAccount
 
 
 class LogActivityForm(forms.ModelForm):
@@ -16,9 +16,17 @@ class LogActivityForm(forms.ModelForm):
 
 
 class SendMessageForm(forms.Form):
-    channel = forms.ChoiceField(
-        choices=Activity.Channel.choices,
-        initial=Activity.Channel.TELEGRAM,
-        label="Канал",
+    text = forms.CharField(widget=forms.Textarea(attrs={"rows": 2}), label="Сообщение в Telegram")
+
+
+class TelegramSettingsForm(forms.ModelForm):
+    bot_token = forms.CharField(
+        label="Токен бота",
+        help_text="Получить у @BotFather в Telegram",
+        widget=forms.TextInput(attrs={"autocomplete": "off"}),
     )
-    text = forms.CharField(widget=forms.Textarea(attrs={"rows": 2}), label="Текст")
+
+    class Meta:
+        model = TelegramAccount
+        fields = ["bot_token", "is_active"]
+        labels = {"is_active": "Бот активен"}

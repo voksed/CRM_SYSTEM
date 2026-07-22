@@ -38,25 +38,15 @@
       <li class="muted">Задач нет.</li>
       {% endfor %}
     </ul>
-  </div>
 
-  <div class="contact-column contact-column--wide">
-    <h3>Коммуникации</h3>
-
-    <form method="post" action="{% url 'contact_send_message' contact.id %}" class="form form--inline">
-      {% csrf_token %}
-      {{ send_form.as_p }}
-      <button type="submit" class="btn btn--small">Отправить</button>
-    </form>
-
+    <h3>Журнал активности</h3>
     <form method="post" action="{% url 'contact_log_activity' contact.id %}" class="form form--inline">
       {% csrf_token %}
       {{ log_form.as_p }}
       <button type="submit" class="btn btn--small btn--secondary">Записать в лог</button>
     </form>
-
     <ul class="timeline">
-      {% for activity in activities %}
+      {% for activity in activity_log %}
       <li class="timeline__item timeline__item--{{ activity.direction }}">
         <div class="timeline__meta">
           {{ activity.get_type_display }} · {{ activity.get_channel_display }}
@@ -67,9 +57,37 @@
         <div class="timeline__text">{{ activity.text|linebreaksbr }}</div>
       </li>
       {% empty %}
-      <li class="muted">Коммуникаций пока нет.</li>
+      <li class="muted">Записей пока нет.</li>
       {% endfor %}
     </ul>
+  </div>
+
+  <div class="contact-column contact-column--wide" id="chat">
+    <h3>Telegram</h3>
+
+    {% if not contact.telegram_chat_id %}
+    <p class="muted" style="font-size:13px;">
+      Контакт ещё не писал в Telegram — чат появится автоматически, как только придёт первое
+      сообщение от него, либо привяжется, если вы напишете первым (после ответа клиента).
+    </p>
+    {% endif %}
+
+    <div class="chat" id="js-chat" data-contact-id="{{ contact.id }}" data-last-id="{% if chat_messages %}{{ chat_messages.last.id }}{% else %}0{% endif %}">
+      {% for message in chat_messages %}
+      <div class="chat__bubble chat__bubble--{{ message.direction }}">
+        <div class="chat__text">{{ message.text|linebreaksbr }}</div>
+        <div class="chat__time">{{ message.created_at|date:"d.m H:i" }}</div>
+      </div>
+      {% empty %}
+      <p class="muted" id="js-chat-empty">Сообщений пока нет.</p>
+      {% endfor %}
+    </div>
+
+    <form method="post" action="{% url 'contact_send_message' contact.id %}" class="form form--inline chat__form">
+      {% csrf_token %}
+      {{ send_form.as_p }}
+      <button type="submit" class="btn btn--small">Отправить в Telegram</button>
+    </form>
   </div>
 </div>
 {% endblock %}

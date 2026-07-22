@@ -30,10 +30,6 @@ class Activity(models.Model):
 
     class Channel(models.TextChoices):
         TELEGRAM = "telegram", "Telegram"
-        WHATSAPP = "whatsapp", "WhatsApp"
-        VK = "vk", "VK"
-        PHONE = "phone", "Телефон"
-        EMAIL = "email", "Email"
         MANUAL = "manual", "Вручную"
 
     class Direction(models.TextChoices):

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Telegram{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <h2>Telegram-бот</h2>
+
+  <div class="card {% if account.bot_username %}card--success{% else %}card--secondary{% endif %}" style="margin-bottom: 20px;">
+    {% if account.bot_username %}
+    <span class="card__value">@{{ account.bot_username }}</span>
+    <span class="card__label">{% if account.is_active %}подключён и активен{% else %}подключён, но отключён{% endif %}</span>
+    {% else %}
+    <span class="card__value">—</span>
+    <span class="card__label">бот ещё не подключён</span>
+    {% endif %}
+  </div>
+
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Сохранить и проверить</button>
+  </form>
+
+  <p class="muted" style="font-size: 13px;">
+    Как получить токен: напишите <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>
+    в Telegram → <code>/newbot</code> → следуйте инструкциям → скопируйте выданный токен сюда.
+    После сохранения запустите приём сообщений:
+  </p>
+  <pre class="empty-state" style="text-align:left; padding: 14px 18px;">python manage.py run_telegram_bot</pre>
+</div>
+{% endblock %}
