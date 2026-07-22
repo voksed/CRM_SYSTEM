@@ -1,7 +1,17 @@
 from aiogram import Bot
+from aiogram.types import BotCommand
 from asgiref.sync import async_to_sync
 
 from .models import Activity
+
+# Меню быстрых команд Telegram (кнопка "/" в чате с ботом). Используется и при
+# сохранении токена в настройках, и при запуске run_telegram_bot — регистрация
+# идемпотентна, повторный вызов просто переустанавливает тот же список.
+BOT_COMMANDS = [
+    BotCommand(command="start", description="Начать общение"),
+    BotCommand(command="help", description="Как это работает"),
+    BotCommand(command="operator", description="Позвать оператора"),
+]
 
 
 class ChannelNotConnected(Exception):
@@ -60,3 +70,17 @@ def verify_bot_token(token: str) -> str:
     except Exception as exc:
         raise ChannelNotConnected(f"Telegram отклонил токен: {exc}") from exc
     return me.username
+
+
+def register_bot_commands(token: str) -> None:
+    """Регистрирует меню быстрых команд (/start, /help, /operator) у бота —
+    после этого команды сразу видны клиенту в Telegram."""
+
+    async def _register():
+        bot = Bot(token=token)
+        try:
+            await bot.set_my_commands(BOT_COMMANDS)
+        finally:
+            await bot.session.close()
+
+    async_to_sync(_register)()

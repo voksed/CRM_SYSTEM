@@ -9,11 +9,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from accounts.permissions import owner_required, scope_to_owner_field
+from accounts.permissions import owner_required, scope_claimable
 from accounts.services import get_or_create_organization
 from contacts.models import Contact
 
-from .adapters import ChannelNotConnected, verify_bot_token
+from .adapters import ChannelNotConnected, register_bot_commands, verify_bot_token
 from .forms import TelegramSettingsForm
 from .models import Activity, TelegramAccount
 from .services import receive_telegram_message
@@ -56,6 +56,7 @@ def telegram_settings(request):
             candidate = form.save(commit=False)
             try:
                 candidate.bot_username = verify_bot_token(candidate.bot_token)
+                register_bot_commands(candidate.bot_token)
             except ChannelNotConnected as exc:
                 form.add_error("bot_token", str(exc))
             else:
@@ -88,6 +89,6 @@ def telegram_inbox(request):
         )
         .order_by("-last_message_at")
     )
-    contacts = scope_to_owner_field(contacts, request.user)
+    contacts = scope_claimable(contacts, request.user)
 
     return render(request, "channels_app/telegram_inbox.html", {"contacts": contacts})

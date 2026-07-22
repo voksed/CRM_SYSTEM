@@ -11,22 +11,33 @@
 {% if contacts %}
 <ul class="plain-list">
   {% for contact in contacts %}
-  <li>
-    <a href="{% url 'contact_detail' contact.id %}#chat" class="table__person" style="justify-content: space-between; align-items: flex-start;">
-      <span style="display:flex; align-items:center; gap:8px;">
+  <li style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <a href="{% url 'contact_detail' contact.id %}#chat" class="table__person" style="flex:1; min-width:0;">
+      <span style="display:flex; align-items:center; gap:8px; min-width:0;">
         <span class="avatar avatar--sm">{{ contact|initials }}</span>
-        <span>
-          <div>{{ contact.full_name }}</div>
+        <span style="min-width:0;">
+          <div>
+            {{ contact.full_name }}
+            {% if not contact.responsible %}<span class="badge">не назначен</span>{% endif %}
+          </div>
           <div class="muted" style="font-weight:400; font-size:12.5px;">
             {% if contact.last_message_direction == "in" %}Клиент: {% else %}Вы: {% endif %}
             {{ contact.last_message_text|default:"нет сообщений"|truncatechars:60 }}
           </div>
         </span>
       </span>
+    </a>
+    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+      {% if not contact.responsible %}
+      <form method="post" action="{% url 'contact_claim' contact.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--small">Взять в работу</button>
+      </form>
+      {% endif %}
       {% if contact.last_message_at %}
       <span class="muted" style="font-size:12px; white-space:nowrap;">{{ contact.last_message_at|date:"d.m H:i" }}</span>
       {% endif %}
-    </a>
+    </div>
   </li>
   {% endfor %}
 </ul>

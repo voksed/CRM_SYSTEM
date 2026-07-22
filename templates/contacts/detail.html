@@ -17,7 +17,18 @@
   {% if contact.phone %} · <span>{{ contact.phone }}</span>{% endif %}
   {% if contact.email %} · <span>{{ contact.email }}</span>{% endif %}
   {% if contact.telegram_chat_id %} · <span>Telegram привязан</span>{% endif %}
+  {% if contact.responsible %} · <span>Ответственный: {{ contact.responsible }}</span>{% endif %}
 </div>
+
+{% if can_claim %}
+<div class="message message--error" style="border-left-color: var(--primary); background: var(--primary-soft); color: var(--primary);">
+  Контакт пока никому не назначен.
+  <form method="post" action="{% url 'contact_claim' contact.id %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn--small">Взять в работу</button>
+  </form>
+</div>
+{% endif %}
 
 <div class="contact-columns">
   <div class="contact-column">
@@ -40,11 +51,13 @@
     </ul>
 
     <h3>Журнал активности</h3>
+    {% if not can_claim %}
     <form method="post" action="{% url 'contact_log_activity' contact.id %}" class="form form--inline">
       {% csrf_token %}
       {{ log_form.as_p }}
       <button type="submit" class="btn btn--small btn--secondary">Записать в лог</button>
     </form>
+    {% endif %}
     <ul class="timeline">
       {% for activity in activity_log %}
       <li class="timeline__item timeline__item--{{ activity.direction }}">
@@ -83,11 +96,15 @@
       {% endfor %}
     </div>
 
+    {% if not can_claim %}
     <form method="post" action="{% url 'contact_send_message' contact.id %}" class="form form--inline chat__form">
       {% csrf_token %}
       {{ send_form.as_p }}
       <button type="submit" class="btn btn--small">Отправить в Telegram</button>
     </form>
+    {% else %}
+    <p class="muted" style="font-size:13px;">Возьмите контакт в работу, чтобы отвечать в чате.</p>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from accounts.permissions import is_owner, scope_to_owner_field
+from accounts.permissions import is_owner, scope_claimable, scope_to_owner_field
 from accounts.services import get_or_create_organization
 from audit.models import AuditLog
 from audit.services import get_client_ip, log_action
@@ -19,7 +19,7 @@ from .models import Contact
 def contact_list(request):
     org = get_or_create_organization(request.user)
     contacts = Contact.objects.filter(organization=org).select_related("responsible")
-    contacts = scope_to_owner_field(contacts, request.user)
+    contacts = scope_claimable(contacts, request.user)
 
     status = request.GET.get("status")
     if status:
@@ -96,8 +96,9 @@ def contact_delete(request, contact_id):
 @login_required
 def contact_detail(request, contact_id):
     org = get_or_create_organization(request.user)
-    contacts = scope_to_owner_field(Contact.objects.filter(organization=org), request.user)
+    contacts = scope_claimable(Contact.objects.filter(organization=org), request.user)
     contact = get_object_or_404(contacts, pk=contact_id)
+    can_claim = contact.responsible_id is None and not is_owner(request.user)
 
     chat_messages = contact.activities.filter(channel=Activity.Channel.TELEGRAM).order_by(
         "created_at"
@@ -113,6 +114,7 @@ def contact_detail(request, contact_id):
 
     context = {
         "contact": contact,
+        "can_claim": can_claim,
         "chat_messages": chat_messages,
         "activity_log": activity_log,
         "deals": deals,
@@ -121,6 +123,26 @@ def contact_detail(request, contact_id):
         "send_form": send_form,
     }
     return render(request, "contacts/detail.html", context)
+
+
+@login_required
+@require_POST
+def contact_claim(request, contact_id):
+    org = get_or_create_organization(request.user)
+    contact = get_object_or_404(
+        Contact, pk=contact_id, organization=org, responsible__isnull=True
+    )
+    contact.responsible = request.user
+    contact.save(update_fields=["responsible"])
+    log_action(
+        request.user,
+        AuditLog.Action.UPDATED,
+        obj=contact,
+        model_name="Контакт",
+        object_repr=f"{contact.full_name} (взял в работу)",
+        ip_address=get_client_ip(request),
+    )
+    return redirect("contact_detail", contact_id=contact.id)
 
 
 @login_required

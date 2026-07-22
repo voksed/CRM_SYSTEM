@@ -1,6 +1,7 @@
 from functools import wraps
 
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 
 from .models import User
 
@@ -24,3 +25,11 @@ def scope_to_owner_field(queryset, user, field="responsible"):
     if is_owner(user):
         return queryset
     return queryset.filter(**{field: user})
+
+
+def scope_claimable(queryset, user, field="responsible"):
+    """Как scope_to_owner_field, но менеджер дополнительно видит записи без
+    ответственного — их можно забрать в работу самому, не дожидаясь владельца."""
+    if is_owner(user):
+        return queryset
+    return queryset.filter(Q(**{field: user}) | Q(**{f"{field}__isnull": True}))

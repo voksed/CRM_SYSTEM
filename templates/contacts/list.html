@@ -38,13 +38,24 @@
       </td>
       <td>{{ contact.get_source_display }}</td>
       <td><span class="status-pill status-pill--{{ contact.status }}">{{ contact.get_status_display }}</span></td>
-      <td>{{ contact.responsible|default:"—" }}</td>
+      <td>
+        {% if contact.responsible %}
+          {{ contact.responsible }}
+        {% else %}
+          <form method="post" action="{% url 'contact_claim' contact.id %}" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn--small">Взять в работу</button>
+          </form>
+        {% endif %}
+      </td>
       <td class="table__actions">
+        {% if contact.responsible or user.role == "owner" %}
         <a href="{% url 'contact_update' contact.id %}">изменить</a>
         <form method="post" action="{% url 'contact_delete' contact.id %}" class="js-confirm-delete" style="display:inline">
           {% csrf_token %}
           <button type="submit" class="btn btn--danger btn--small">удалить</button>
         </form>
+        {% endif %}
       </td>
     </tr>
     {% endfor %}
