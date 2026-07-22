@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load accounts_extras %}
+
+{% block title %}Журнал событий{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Журнал событий</h2>
+</div>
+
+<form method="get" class="filters-bar">
+  <select name="action" onchange="this.form.submit()">
+    <option value="">Все действия</option>
+    {% for value, label in actions %}
+    <option value="{{ value }}" {% if active_action == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="actor" onchange="this.form.submit()">
+    <option value="">Все сотрудники</option>
+    {% for member in members %}
+    <option value="{{ member.id }}" {% if active_actor == member.id|stringformat:"s" %}selected{% endif %}>{{ member.get_full_name|default:member.username }}</option>
+    {% endfor %}
+  </select>
+  {% if active_action or active_actor %}
+  <a class="btn btn--secondary btn--small" href="{% url 'audit_log_list' %}">Сбросить</a>
+  {% endif %}
+</form>
+
+{% if page_obj %}
+<table class="table">
+  <thead>
+    <tr><th>Когда</th><th>Кто</th><th>Действие</th><th>Объект</th><th>Описание</th><th>IP</th></tr>
+  </thead>
+  <tbody>
+    {% for log in page_obj %}
+    <tr>
+      <td>{{ log.created_at|date:"d.m.Y H:i:s" }}</td>
+      <td>
+        {% if log.actor %}
+        <span class="table__person"><span class="avatar avatar--sm">{{ log.actor|initials }}</span>{{ log.actor_username }}</span>
+        {% else %}
+        {{ log.actor_username|default:"—" }}
+        {% endif %}
+      </td>
+      <td><span class="status-pill status-pill--{{ log.action }}">{{ log.get_action_display }}</span></td>
+      <td>{{ log.model_name|default:"—" }}</td>
+      <td>{{ log.object_repr|default:"—" }}</td>
+      <td class="muted">{{ log.ip_address|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}{% if active_action %}&action={{ active_action }}{% endif %}{% if active_actor %}&actor={{ active_actor }}{% endif %}">← Раньше</a>
+  {% endif %}
+  <span class="muted">стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}{% if active_action %}&action={{ active_action }}{% endif %}{% if active_actor %}&actor={{ active_actor }}{% endif %}">Позже →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <svg class="empty-state__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+  <div class="empty-state__text">Событий пока нет.</div>
+</div>
+{% endif %}
+{% endblock %}

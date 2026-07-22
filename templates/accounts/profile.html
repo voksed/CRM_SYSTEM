@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <h2>Мой профиль</h2>
+  <p class="contact-meta">{{ user.username }} · {{ user.get_role_display }}</p>
+
+  <form method="post" action="{% url 'profile_edit' %}" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Сохранить</button>
+  </form>
+
+  <h3>Сменить пароль</h3>
+  <form method="post" action="{% url 'profile_change_password' %}" class="form">
+    {% csrf_token %}
+    {{ password_form.as_p }}
+    <button type="submit" class="btn">Сменить пароль</button>
+  </form>
+</div>
+{% endblock %}

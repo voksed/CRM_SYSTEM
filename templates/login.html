@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <div class="auth-card__brand">
+    <span class="sidebar__brand-mark"></span>
+    <span>CRM</span>
+  </div>
+  <p class="auth-card__subtitle">Войдите, чтобы продолжить</p>
+  <form method="post" class="login-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn--block">Войти</button>
+  </form>
+</div>
+{% endblock %}

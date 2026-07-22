@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Аналитика{% endblock %}
+
+{% block content %}
+<h2>{% if owner_view %}Воронка продаж{% else %}Моя воронка{% endif %}</h2>
+<table class="table">
+  <thead>
+    <tr><th>Этап</th><th>Сделок сейчас на этапе</th></tr>
+  </thead>
+  <tbody>
+    {% for stage in stages %}
+    <tr>
+      <td>{{ stage.name }}</td>
+      <td>{{ stage.deals_count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p>Всего сделок: {{ total_deals }} · Успешно: {{ won_count }} · Отказ: {{ lost_count }} · Конверсия в успех: {{ conversion_rate }}%</p>
+
+{% if owner_view %}
+<h2>KPI по сотрудникам</h2>
+<table class="table">
+  <thead>
+    <tr><th>Сотрудник</th><th>Сделок</th><th>Выручка (успешные)</th><th>Коммуникаций</th></tr>
+  </thead>
+  <tbody>
+    {% for manager in manager_stats %}
+    <tr>
+      <td>{{ manager }}</td>
+      <td>{{ manager.deals_count }}</td>
+      <td>{{ manager.revenue|default:"0" }} ₽</td>
+      <td>{{ manager.activities_count }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">Нет данных.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<h2>Выручка по источникам трафика{% if not owner_view %} (мои сделки){% endif %}</h2>
+<table class="table">
+  <thead>
+    <tr><th>Источник</th><th>Сделок</th><th>Выручка</th></tr>
+  </thead>
+  <tbody>
+    {% for row in revenue_by_source %}
+    <tr>
+      <td>{{ row.label }}</td>
+      <td>{{ row.deals_count }}</td>
+      <td>{{ row.revenue }} ₽</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Успешных сделок пока нет.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

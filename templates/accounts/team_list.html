@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load accounts_extras %}
+
+{% block title %}Команда{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Команда</h2>
+  <a class="btn" href="{% url 'team_create' %}">+ Добавить менеджера</a>
+</div>
+
+<table class="table">
+  <thead>
+    <tr><th>Имя</th><th>Логин</th><th>Роль</th><th>Email</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for member in members %}
+    <tr>
+      <td class="table__person">
+        <span class="avatar avatar--sm">{{ member|initials }}</span>
+        {{ member.get_full_name|default:"—" }}
+      </td>
+      <td>{{ member.username }}</td>
+      <td><span class="status-pill status-pill--client">{{ member.get_role_display }}</span></td>
+      <td>{{ member.email|default:"—" }}</td>
+      <td><a href="{% url 'team_update' member.id %}">изменить</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

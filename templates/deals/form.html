@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Новая сделка{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <h2>Новая сделка</h2>
+
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Сохранить</button>
+    <a class="btn btn--secondary" href="{% url 'kanban_board' %}">Отмена</a>
+  </form>
+</div>
+{% endblock %}

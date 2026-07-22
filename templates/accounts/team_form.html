@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_new %}Новый менеджер{% else %}Редактирование сотрудника{% endif %}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <h2>{% if is_new %}Добавить менеджера{% else %}{{ member.get_full_name|default:member.username }}{% endif %}</h2>
+
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">{% if is_new %}Создать{% else %}Сохранить{% endif %}</button>
+    <a class="btn btn--secondary" href="{% url 'team_list' %}">Отмена</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Задачи{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Задачи</h2>
+  <a class="btn" href="{% url 'task_create' %}">+ Задача</a>
+</div>
+
+{% if tasks %}
+<ul class="lesson-list">
+  {% for task in tasks %}
+  <li class="lesson {% if task.due_at < now %}lesson--overdue{% endif %}" data-task-id="{{ task.id }}">
+    <div class="lesson__time">{{ task.due_at|date:"d.m H:i" }}</div>
+    <div class="lesson__students">
+      <strong>{{ task.get_task_type_display }}:</strong> {{ task.title }}
+      {% if task.contact %} — <a href="{% url 'contact_detail' task.contact.id %}">{{ task.contact }}</a>{% endif %}
+      {% if task.is_auto_generated %}<span class="badge">авто</span>{% endif %}
+    </div>
+    <div class="lesson__students">{{ task.assigned_to }}</div>
+    <button class="btn btn--small js-task-done" data-task-id="{{ task.id }}">Готово</button>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty-state">
+  <svg class="empty-state__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></svg>
+  <div class="empty-state__text">Открытых задач нет.</div>
+</div>
+{% endif %}
+{% endblock %}

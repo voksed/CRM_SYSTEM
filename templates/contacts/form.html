@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_new %}Новый контакт{% else %}Редактирование контакта{% endif %}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <h2>{% if is_new %}Новый контакт{% else %}{{ contact.full_name }}{% endif %}</h2>
+
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Сохранить</button>
+    <a class="btn btn--secondary" href="{% url 'contact_list' %}">Отмена</a>
+  </form>
+</div>
+{% endblock %}

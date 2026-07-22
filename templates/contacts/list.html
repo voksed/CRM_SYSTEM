@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load accounts_extras %}
+
+{% block title %}Контакты{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Контакты</h2>
+  <a class="btn" href="{% url 'contact_create' %}">+ Добавить контакт</a>
+</div>
+
+<div class="filters">
+  <a href="{% url 'contact_list' %}" class="{% if not active_status %}filter--active{% endif %}">Все</a>
+  {% for value, label in statuses %}
+  <a href="?status={{ value }}" class="{% if active_status == value %}filter--active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if contacts %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Имя</th>
+      <th>Источник</th>
+      <th>Статус</th>
+      <th>Ответственный</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for contact in contacts %}
+    <tr>
+      <td>
+        <a class="table__person" href="{% url 'contact_detail' contact.id %}">
+          <span class="avatar avatar--sm">{{ contact|initials }}</span>
+          {{ contact.full_name }}
+        </a>
+      </td>
+      <td>{{ contact.get_source_display }}</td>
+      <td><span class="status-pill status-pill--{{ contact.status }}">{{ contact.get_status_display }}</span></td>
+      <td>{{ contact.responsible|default:"—" }}</td>
+      <td class="table__actions">
+        <a href="{% url 'contact_update' contact.id %}">изменить</a>
+        <form method="post" action="{% url 'contact_delete' contact.id %}" class="js-confirm-delete" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--danger btn--small">удалить</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  <svg class="empty-state__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+  <div class="empty-state__text">Контактов пока нет — добавь первый.</div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд{% endblock %}
+
+{% block content %}
+<section class="cards">
+  <div class="card card--primary">
+    <span class="card__value">{{ open_deals_count }}</span>
+    <span class="card__label">сделок в работе</span>
+  </div>
+  <div class="card card--secondary">
+    <span class="card__value">{{ open_deals_amount }} ₽</span>
+    <span class="card__label">потенциальная выручка</span>
+  </div>
+  <div class="card card--success">
+    <span class="card__value">{{ contacts_count }}</span>
+    <span class="card__label">контактов в базе</span>
+  </div>
+</section>
+
+<div class="page-header">
+  <h2>Мои задачи на сегодня и просроченные</h2>
+  <a class="btn" href="{% url 'task_list' %}">Все задачи</a>
+</div>
+
+<ul class="lesson-list">
+  {% for task in my_tasks %}
+  <li class="lesson">
+    <div class="lesson__time">{{ task.due_at|date:"d.m H:i" }}</div>
+    <div class="lesson__students">{{ task.title }}{% if task.contact %} — {{ task.contact }}{% endif %}</div>
+    <button class="btn btn--small js-task-done" data-task-id="{{ task.id }}">Готово</button>
+  </li>
+  {% empty %}
+  <li class="lesson-list__empty">Просроченных и сегодняшних задач нет.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

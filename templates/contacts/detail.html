@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contact.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>{{ contact.full_name }}</h2>
+  <div>
+    <a class="btn btn--secondary" href="{% url 'contact_update' contact.id %}">Изменить</a>
+    <a class="btn" href="{% url 'deal_create' %}?contact={{ contact.id }}">+ Сделка</a>
+  </div>
+</div>
+
+<div class="contact-meta">
+  <span>{{ contact.get_source_display }}</span> ·
+  <span>{{ contact.get_status_display }}</span>
+  {% if contact.phone %} · <span>{{ contact.phone }}</span>{% endif %}
+  {% if contact.email %} · <span>{{ contact.email }}</span>{% endif %}
+  {% if contact.telegram_chat_id %} · <span>Telegram привязан</span>{% endif %}
+</div>
+
+<div class="contact-columns">
+  <div class="contact-column">
+    <h3>Сделки</h3>
+    <ul class="plain-list">
+      {% for deal in deals %}
+      <li><a href="{% url 'deal_billing' deal.id %}">{{ deal.title }}</a> — {{ deal.stage.name }} ({{ deal.amount }} ₽)</li>
+      {% empty %}
+      <li class="muted">Сделок пока нет.</li>
+      {% endfor %}
+    </ul>
+
+    <h3>Открытые задачи</h3>
+    <ul class="plain-list">
+      {% for task in tasks %}
+      <li>{{ task.due_at|date:"d.m H:i" }} — {{ task.title }}</li>
+      {% empty %}
+      <li class="muted">Задач нет.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="contact-column contact-column--wide">
+    <h3>Коммуникации</h3>
+
+    <form method="post" action="{% url 'contact_send_message' contact.id %}" class="form form--inline">
+      {% csrf_token %}
+      {{ send_form.as_p }}
+      <button type="submit" class="btn btn--small">Отправить</button>
+    </form>
+
+    <form method="post" action="{% url 'contact_log_activity' contact.id %}" class="form form--inline">
+      {% csrf_token %}
+      {{ log_form.as_p }}
+      <button type="submit" class="btn btn--small btn--secondary">Записать в лог</button>
+    </form>
+
+    <ul class="timeline">
+      {% for activity in activities %}
+      <li class="timeline__item timeline__item--{{ activity.direction }}">
+        <div class="timeline__meta">
+          {{ activity.get_type_display }} · {{ activity.get_channel_display }}
+          {% if activity.direction %}· {{ activity.get_direction_display }}{% endif %}
+          · {{ activity.created_at|date:"d.m H:i" }}
+          {% if activity.created_by %} · {{ activity.created_by }}{% endif %}
+        </div>
+        <div class="timeline__text">{{ activity.text|linebreaksbr }}</div>
+      </li>
+      {% empty %}
+      <li class="muted">Коммуникаций пока нет.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

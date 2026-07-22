@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Счёт{% endblock %}
+
+{% block content %}
+<h2>Счёт на оплату</h2>
+<p>{{ invoice.deal.title }}</p>
+<p class="card__value">{{ invoice.amount }} ₽</p>
+<p>Статус: {{ invoice.get_status_display }}</p>
+
+{% if invoice.status == "unpaid" %}
+<p class="muted">Онлайн-оплата по этой ссылке будет доступна после подключения платёжного провайдера (ЮKassa/Stripe и т.п.) — для дипломного MVP оплата фиксируется менеджером вручную.</p>
+{% endif %}
+{% endblock %}

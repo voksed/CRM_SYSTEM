@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Новое правило{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <h2>Новое правило автоматизации</h2>
+
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Сохранить</button>
+    <a class="btn btn--secondary" href="{% url 'rule_list' %}">Отмена</a>
+  </form>
+</div>
+{% endblock %}

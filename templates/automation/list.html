@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Автоматизация{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Правила автоматизации</h2>
+  <a class="btn" href="{% url 'rule_create' %}">+ Правило</a>
+</div>
+
+{% if rules %}
+<table class="table">
+  <thead>
+    <tr><th>Название</th><th>Триггер</th><th>Действие</th><th>Активно</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for rule in rules %}
+    <tr>
+      <td>{{ rule.name }}</td>
+      <td>{{ rule.get_trigger_display }}{% if rule.trigger_stage %} → {{ rule.trigger_stage }}{% endif %}</td>
+      <td>{{ rule.get_action_display }}{% if rule.action_target_stage %} → {{ rule.action_target_stage }}{% endif %}</td>
+      <td>{% if rule.is_active %}<span class="status-pill status-pill--client">да</span>{% else %}<span class="status-pill status-pill--lost">нет</span>{% endif %}</td>
+      <td>
+        <form method="post" action="{% url 'rule_delete' rule.id %}" class="js-confirm-delete" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--danger btn--small">удалить</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  <svg class="empty-state__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+  <div class="empty-state__text">Правил пока нет.</div>
+</div>
+{% endif %}
+{% endblock %}
