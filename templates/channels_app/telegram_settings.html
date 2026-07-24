@@ -1,32 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}Telegram{% endblock %}
+{% block title %}Telegram-боты{% endblock %}
 
 {% block content %}
-<div class="form-page">
-  <h2>Telegram-бот</h2>
-
-  <div class="card {% if account.bot_username %}card--success{% else %}card--secondary{% endif %}" style="margin-bottom: 20px;">
-    {% if account.bot_username %}
-    <span class="card__value">@{{ account.bot_username }}</span>
-    <span class="card__label">{% if account.is_active %}подключён и активен{% else %}подключён, но отключён{% endif %}</span>
-    {% else %}
-    <span class="card__value">—</span>
-    <span class="card__label">бот ещё не подключён</span>
-    {% endif %}
-  </div>
-
-  <form method="post" class="form">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Сохранить и проверить</button>
-  </form>
-
-  <p class="muted" style="font-size: 13px;">
-    Как получить токен: напишите <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>
-    в Telegram → <code>/newbot</code> → следуйте инструкциям → скопируйте выданный токен сюда.
-    После сохранения запустите приём сообщений:
-  </p>
-  <pre class="empty-state" style="text-align:left; padding: 14px 18px;">python manage.py run_telegram_bot</pre>
+<div class="page-header">
+  <h2>Telegram-боты</h2>
+  <a class="btn" href="{% url 'telegram_bot_create' %}">+ Добавить бота</a>
 </div>
+
+{% if accounts %}
+<div class="bot-list">
+  {% for account in accounts %}
+  <div class="bot-card {% if account.is_active %}bot-card--active{% endif %}">
+    <div class="bot-card__main">
+      <div class="bot-card__title">
+        {% if account.bot_username %}@{{ account.bot_username }}{% else %}Без имени{% endif %}
+        {% if account.title %}<span class="muted">— {{ account.title }}</span>{% endif %}
+      </div>
+      <div class="bot-card__meta">
+        <span class="status-pill status-pill--{% if account.is_active %}client{% else %}lost{% endif %}">
+          {% if account.is_active %}активен{% else %}отключён{% endif %}
+        </span>
+        {% if account.collect_lead %}
+        <span class="badge">анкета: {{ account.questions.count }} вопрос(ов)</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="bot-card__actions">
+      <a class="btn btn--small btn--secondary" href="{% url 'telegram_bot_edit' account.id %}">Настроить</a>
+      <form method="post" action="{% url 'telegram_bot_delete' account.id %}" class="js-confirm-delete" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--small btn--danger">Удалить</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <svg class="empty-state__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+  <div class="empty-state__text">Ботов пока нет — добавьте первого.</div>
+</div>
+{% endif %}
+
+<p class="muted" style="font-size: 13px; margin-top: 22px;">
+  Как получить токен: напишите <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>
+  в Telegram → <code>/newbot</code> → скопируйте выданный токен в настройки бота.
+  Приём сообщений работает, пока запущен сервер (<code>uvicorn config.asgi:application</code>) —
+  боты стартуют внутри него автоматически.
+</p>
 {% endblock %}

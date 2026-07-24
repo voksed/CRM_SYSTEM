@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -25,7 +26,20 @@ def contact_list(request):
     if status:
         contacts = contacts.filter(status=status)
 
-    context = {"contacts": contacts, "statuses": Contact.Status.choices, "active_status": status}
+    query = request.GET.get("q", "").strip()
+    if query:
+        contacts = contacts.filter(
+            Q(full_name__icontains=query)
+            | Q(phone__icontains=query)
+            | Q(email__icontains=query)
+        )
+
+    context = {
+        "contacts": contacts,
+        "statuses": Contact.Status.choices,
+        "active_status": status,
+        "query": query,
+    }
     return render(request, "contacts/list.html", context)
 
 
@@ -193,6 +207,8 @@ def contact_telegram_messages_json(request, contact_id):
                 "direction": message.direction,
                 "text": message.text,
                 "created_at": message.created_at.strftime("%d.%m %H:%M"),
+                "failed": message.delivery_failed,
+                "error": message.delivery_error,
             }
             for message in messages
         ]

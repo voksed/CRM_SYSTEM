@@ -41,12 +41,17 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    # daphne даёт ASGI-вариант runserver (WebSocket). Основной способ запуска —
+    # uvicorn config.asgi:application (у него есть lifespan, поэтому Telegram-бот
+    # стартует внутри веб-процесса). Должен идти первым в списке приложений.
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'rest_framework',
     'accounts',
     'contacts',
@@ -56,6 +61,7 @@ INSTALLED_APPS = [
     'channels_app',
     'automation',
     'audit',
+    'notifications',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -82,12 +88,24 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'notifications.context_processors.notifications',
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# Слой каналов для WebSocket. In-memory — всё в одном процессе, без Redis:
+# и веб-сервер, и Telegram-бот работают внутри одного ASGI-процесса, поэтому
+# они видят одни и те же группы каналов. Для нескольких процессов/продакшена
+# сюда ставится channels_redis.
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
 
 
 # Database

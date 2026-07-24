@@ -348,9 +348,9 @@ a {
 /* Layout */
 
 .container {
-  max-width: 1120px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 28px 32px;
+  padding: 28px 40px;
 }
 
 .page-header {
@@ -741,7 +741,7 @@ button {
 }
 
 .form-page {
-  max-width: 640px;
+  max-width: 920px;
   margin: 0 auto;
 }
 
@@ -1104,7 +1104,8 @@ button {
 .kanban {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(240px, 1fr);
+  grid-auto-columns: minmax(230px, 1fr);
+  align-items: start;
   gap: 14px;
   overflow-x: auto;
   padding-bottom: 14px;
@@ -1136,7 +1137,7 @@ button {
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  min-height: 200px;
+  min-height: 150px;
   border-top: 3px solid var(--border);
 }
 
@@ -1173,6 +1174,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 92px;
   background: var(--bg);
   border-radius: 0 0 var(--radius) var(--radius);
   transition: background 0.15s;
@@ -1182,12 +1184,20 @@ button {
   background: var(--primary-soft);
 }
 
+.kanban-column__body--over .kanban-column__empty {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .kanban-column__empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--muted);
   font-size: 12px;
-  text-align: center;
-  padding: 18px 8px;
-  border: 1px dashed var(--border);
+  min-height: 72px;
+  border: 1.5px dashed var(--border);
   border-radius: var(--radius-sm);
 }
 
@@ -1357,4 +1367,386 @@ button {
   --sidebar-bg: #0f172a;
   --sidebar-bg-active: #1e293b;
   --sidebar-border: #1e293b;
+}
+
+/* ============================================================
+   Дашборд 2.0, календарь, уведомления, поиск — новые блоки
+   ============================================================ */
+
+.page-header__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.card--danger {
+  border-left-color: var(--danger);
+}
+.card--danger .card__value {
+  color: var(--danger);
+}
+.card--muted {
+  border-left-color: var(--muted);
+}
+
+/* Dashboard two-column layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px;
+  align-items: start;
+}
+.dashboard-col {
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  margin-top: 18px;
+}
+.panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.panel__head h3 {
+  margin: 0;
+}
+.panel__link {
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Reminders list */
+.reminder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.reminder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.reminder:last-child {
+  border-bottom: none;
+}
+.reminder__type {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.reminder__type--meeting { background: var(--secondary-soft); color: var(--secondary); }
+.reminder__type--call { background: var(--success-soft); color: var(--success); }
+.reminder__type--invoice { background: var(--warning-soft); color: var(--warning); }
+.reminder__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reminder__when {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Activity feed */
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.feed__item {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0 12px;
+  position: relative;
+}
+.feed__dot {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.feed__item--call .feed__dot { background: var(--success); }
+.feed__item--email .feed__dot { background: var(--secondary); }
+.feed__item--note .feed__dot { background: var(--warning); }
+.feed__item--system .feed__dot { background: var(--muted); }
+.feed__body { min-width: 0; }
+.feed__title { font-weight: 600; font-size: 13.5px; }
+.feed__text { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+.feed__meta { color: var(--muted); font-size: 12px; margin-top: 3px; }
+
+/* Sidebar notification badge */
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+
+/* Search bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  margin-bottom: 14px;
+}
+.search-bar__icon {
+  position: absolute;
+  left: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.search-bar input[type="search"] {
+  flex: 1;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+}
+.search-bar input[type="search"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.table__contacts {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.table__contacts a { text-decoration: none; }
+.table__contacts .muted { display: block; }
+
+/* Notifications page */
+.notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+.notif {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.notif:last-child { border-bottom: none; }
+.notif--unread { background: var(--primary-soft); }
+.notif__icon {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.notif__icon--task { background: var(--primary); }
+.notif__icon--deal { background: var(--secondary); }
+.notif__icon--contact { background: var(--success); }
+.notif__icon--system { background: var(--muted); }
+.notif__body { flex: 1; min-width: 0; text-decoration: none; color: inherit; }
+.notif__title { font-weight: 600; }
+.notif__text { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+.notif__meta { color: var(--muted); font-size: 12px; margin-top: 3px; }
+
+/* Calendar */
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.calendar-toolbar__title {
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 190px;
+  text-align: center;
+}
+.calendar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+.calendar__head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--surface-hover);
+  border-bottom: 1px solid var(--border);
+}
+.calendar__weekday {
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.calendar__cell {
+  min-height: 96px;
+  padding: 6px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.calendar__cell:nth-child(7n) { border-right: none; }
+.calendar__cell--muted { background: var(--bg); }
+.calendar__cell--muted .calendar__day { color: var(--muted); }
+.calendar__cell--today { background: var(--primary-soft); }
+.calendar__day {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.calendar__cell--today .calendar__day { color: var(--primary); }
+.calendar__events {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.calendar__event {
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.3;
+  padding: 2px 6px;
+  border-radius: 5px;
+  text-decoration: none;
+  background: var(--primary-soft);
+  color: var(--primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-left: 3px solid var(--primary);
+}
+.calendar__event-time { font-weight: 700; font-variant-numeric: tabular-nums; }
+.calendar__event--meeting { background: var(--secondary-soft); color: var(--secondary); border-left-color: var(--secondary); }
+.calendar__event--call { background: var(--success-soft); color: var(--success); border-left-color: var(--success); }
+.calendar__event--invoice { background: var(--warning-soft); color: var(--warning); border-left-color: var(--warning); }
+.calendar__event--done { opacity: 0.5; text-decoration: line-through; }
+
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.calendar-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+.calendar-legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.dot--meeting { background: var(--secondary); }
+.dot--call { background: var(--success); }
+.dot--invoice { background: var(--warning); }
+.dot--follow_up { background: var(--primary); }
+.dot--other { background: var(--muted); }
+
+@media (max-width: 640px) {
+  .calendar__cell { min-height: 66px; }
+  .calendar__event { font-size: 0; padding: 3px; }
+  .calendar__event-time { font-size: 10px; }
+}
+
+/* ===== Telegram-боты: список и форма ===== */
+.bot-list { display: flex; flex-direction: column; gap: 12px; }
+.bot-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 18px;
+}
+.bot-card--active { border-left-color: var(--success); }
+.bot-card__title { font-weight: 700; font-size: 15px; }
+.bot-card__meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.bot-card__actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.checkbox-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+.checkbox-row input[type="checkbox"] { order: -1; }
+.checkbox-row label { margin: 0; font-weight: 600; }
+.checkbox-row input[type="checkbox"] { width: 16px; height: 16px; }
+
+.field-error { color: var(--danger); font-size: 12.5px; margin: 4px 0 8px; }
+
+.lead-questions { margin: 12px 0 6px; }
+.lead-questions input[type="text"], .lead-questions select {
+  width: 100%;
+}
+.lead-questions__del { text-align: center; }
+
+/* Недоставленное сообщение в чате */
+.chat__bubble--failed {
+  background: var(--danger-soft) !important;
+  color: var(--danger) !important;
+  border: 1px solid var(--danger);
+}
+.chat__bubble--failed .chat__time { color: var(--danger); opacity: 0.8; }
+.chat__error {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--danger);
+  margin-top: 5px;
+  line-height: 1.35;
 }

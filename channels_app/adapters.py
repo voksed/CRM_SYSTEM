@@ -25,8 +25,10 @@ class TelegramChannel:
         self.organization = organization
 
     def send(self, contact, text: str) -> bool:
-        account = getattr(self.organization, "telegram_account", None)
-        if not account or not account.is_active:
+        account = contact.telegram_account
+        if account is None or not account.is_active:
+            account = self.organization.telegram_accounts.filter(is_active=True).first()
+        if account is None:
             raise ChannelNotConnected("Telegram-бот не подключён для этой организации.")
         if not contact.telegram_chat_id:
             raise ChannelNotConnected("У контакта нет привязанного Telegram-чата.")
@@ -43,6 +45,13 @@ class TelegramChannel:
         except ChannelNotConnected:
             raise
         except Exception as exc:
+            text_exc = str(exc).lower()
+            if "chat not found" in text_exc or "bot was blocked" in text_exc:
+                raise ChannelNotConnected(
+                    "Клиент ещё не начал диалог с ботом (или заблокировал его). "
+                    "Написать первым может только он: пусть отправит боту любое "
+                    "сообщение — после этого вы сможете отвечать."
+                ) from exc
             raise ChannelNotConnected(f"Telegram API отклонил сообщение: {exc}") from exc
         return True
 

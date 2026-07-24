@@ -3,6 +3,7 @@ from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from accounts.permissions import is_owner, scope_to_owner_field
@@ -10,6 +11,8 @@ from accounts.services import get_or_create_organization
 from audit.models import AuditLog
 from audit.services import get_client_ip, log_action
 from contacts.models import Contact
+from notifications.models import Notification
+from notifications.services import notify
 
 from .forms import DealForm
 from .models import Deal, Stage
@@ -86,5 +89,13 @@ def deal_move(request, deal_id):
         model_name="Сделка",
         object_repr=f"{deal.title}: «{old_stage_name}» → «{stage.name}»",
         ip_address=get_client_ip(request),
+    )
+    notify(
+        deal.responsible,
+        f"Сделка «{deal.title}» перемещена",
+        text=f"«{old_stage_name}» → «{stage.name}»",
+        url=reverse("kanban_board"),
+        kind=Notification.Kind.DEAL,
+        actor=request.user,
     )
     return JsonResponse({"id": deal.id, "stage_id": deal.stage_id, "status": deal.status})

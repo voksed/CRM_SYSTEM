@@ -16,22 +16,81 @@
     <span class="card__value">{{ contacts_count }}</span>
     <span class="card__label">контактов в базе</span>
   </div>
+  <div class="card {% if overdue_count %}card--danger{% else %}card--muted{% endif %}">
+    <span class="card__value">{{ overdue_count }}</span>
+    <span class="card__label">просроченных задач</span>
+  </div>
 </section>
 
-<div class="page-header">
-  <h2>Мои задачи на сегодня и просроченные</h2>
-  <a class="btn" href="{% url 'task_list' %}">Все задачи</a>
-</div>
+<div class="dashboard-grid">
+  <div class="dashboard-col">
+    <div class="page-header">
+      <h2>Мои задачи на сегодня и просроченные</h2>
+      <a class="btn btn--secondary btn--small" href="{% url 'task_list' %}">Все задачи</a>
+    </div>
 
-<ul class="lesson-list">
-  {% for task in my_tasks %}
-  <li class="lesson">
-    <div class="lesson__time">{{ task.due_at|date:"d.m H:i" }}</div>
-    <div class="lesson__students">{{ task.title }}{% if task.contact %} — {{ task.contact }}{% endif %}</div>
-    <button class="btn btn--small js-task-done" data-task-id="{{ task.id }}">Готово</button>
-  </li>
-  {% empty %}
-  <li class="lesson-list__empty">Просроченных и сегодняшних задач нет.</li>
-  {% endfor %}
-</ul>
+    <ul class="lesson-list">
+      {% for task in my_tasks %}
+      <li class="lesson" data-task-id="{{ task.id }}">
+        <div class="lesson__time">{{ task.due_at|date:"d.m H:i" }}</div>
+        <div class="lesson__students">{{ task.title }}{% if task.contact %} — {{ task.contact }}{% endif %}</div>
+        <button class="btn btn--small js-task-done" data-task-id="{{ task.id }}">Готово</button>
+      </li>
+      {% empty %}
+      <li class="lesson-list__empty">Просроченных и сегодняшних задач нет.</li>
+      {% endfor %}
+    </ul>
+
+    <div class="panel">
+      <div class="panel__head">
+        <h3>Напоминания и дедлайны — ближайшие 7 дней</h3>
+        <a class="panel__link" href="{% url 'task_calendar' %}">Календарь</a>
+      </div>
+      {% if upcoming_tasks %}
+      <ul class="reminder-list">
+        {% for task in upcoming_tasks %}
+        <li class="reminder">
+          <span class="reminder__type reminder__type--{{ task.task_type }}">{{ task.get_task_type_display }}</span>
+          <span class="reminder__title">{{ task.title }}{% if task.contact %} — {{ task.contact }}{% endif %}</span>
+          <span class="reminder__when">{{ task.due_at|date:"d.m, H:i" }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted">На ближайшую неделю запланированных событий нет.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="dashboard-col">
+    <div class="panel">
+      <div class="panel__head">
+        <h3>История общения</h3>
+      </div>
+      {% if recent_activities %}
+      <ul class="feed">
+        {% for activity in recent_activities %}
+        <li class="feed__item feed__item--{{ activity.type }}">
+          <div class="feed__dot"></div>
+          <div class="feed__body">
+            <div class="feed__title">
+              {{ activity.get_type_display }}
+              {% if activity.contact %}·
+                <a href="{% url 'contact_detail' activity.contact.id %}">{{ activity.contact }}</a>
+              {% endif %}
+            </div>
+            {% if activity.text %}<div class="feed__text">{{ activity.text|truncatechars:110 }}</div>{% endif %}
+            <div class="feed__meta">
+              {{ activity.created_at|date:"d.m H:i" }}{% if activity.created_by %} · {{ activity.created_by }}{% endif %}
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted">Событий общения пока нет.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
 {% endblock %}

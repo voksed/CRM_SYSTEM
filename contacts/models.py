@@ -59,6 +59,14 @@ class Contact(models.Model):
     telegram_chat_id = models.CharField(
         max_length=64, blank=True, verbose_name="Telegram chat ID"
     )
+    telegram_account = models.ForeignKey(
+        "channels_app.TelegramAccount",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="contacts",
+        verbose_name="Telegram-бот",
+    )
     notes = models.TextField(blank=True, verbose_name="Заметки")
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -39,6 +39,7 @@ urlpatterns = [
     path('channels/', include('channels_app.urls')),
     path('automation/', include('automation.urls')),
     path('audit/', include('audit.urls')),
+    path('notifications/', include('notifications.urls')),
 ]
 
 if settings.DEBUG:

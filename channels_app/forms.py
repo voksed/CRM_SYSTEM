@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Activity, TelegramAccount
+from .models import Activity, LeadQuestion, TelegramAccount
 
 
 class LogActivityForm(forms.ModelForm):
@@ -28,5 +28,38 @@ class TelegramSettingsForm(forms.ModelForm):
 
     class Meta:
         model = TelegramAccount
-        fields = ["bot_token", "is_active"]
-        labels = {"is_active": "Бот активен"}
+        fields = [
+            "title",
+            "bot_token",
+            "is_active",
+            "welcome_text",
+            "help_text_message",
+            "operator_text",
+            "collect_lead",
+            "lead_done_text",
+        ]
+        widgets = {
+            "welcome_text": forms.Textarea(attrs={"rows": 2}),
+            "help_text_message": forms.Textarea(attrs={"rows": 2}),
+            "operator_text": forms.Textarea(attrs={"rows": 2}),
+            "lead_done_text": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class LeadQuestionForm(forms.ModelForm):
+    class Meta:
+        model = LeadQuestion
+        fields = ["order", "text", "target"]
+        widgets = {
+            "order": forms.NumberInput(attrs={"style": "width:70px"}),
+            "text": forms.TextInput(attrs={"placeholder": "Например: Как вас зовут?"}),
+        }
+
+
+LeadQuestionFormSet = forms.inlineformset_factory(
+    TelegramAccount,
+    LeadQuestion,
+    form=LeadQuestionForm,
+    extra=3,
+    can_delete=True,
+)

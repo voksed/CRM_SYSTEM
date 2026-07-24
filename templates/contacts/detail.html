@@ -87,8 +87,9 @@
 
     <div class="chat" id="js-chat" data-contact-id="{{ contact.id }}" data-last-id="{% if chat_messages %}{{ chat_messages.last.id }}{% else %}0{% endif %}">
       {% for message in chat_messages %}
-      <div class="chat__bubble chat__bubble--{{ message.direction }}">
+      <div class="chat__bubble chat__bubble--{{ message.direction }}{% if message.delivery_failed %} chat__bubble--failed{% endif %}" data-msg-id="{{ message.id }}">
         <div class="chat__text">{{ message.text|linebreaksbr }}</div>
+        {% if message.delivery_failed %}<div class="chat__error">⚠ Не доставлено{% if message.delivery_error %}: {{ message.delivery_error }}{% endif %}</div>{% endif %}
         <div class="chat__time">{{ message.created_at|date:"d.m H:i" }}</div>
       </div>
       {% empty %}

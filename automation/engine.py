@@ -1,8 +1,11 @@
 import datetime
 
+from django.urls import reverse
 from django.utils import timezone
 
 from channels_app.models import Activity
+from notifications.models import Notification
+from notifications.services import notify
 from tasks.models import Task
 
 from .models import AutomationRule
@@ -10,7 +13,7 @@ from .models import AutomationRule
 
 def apply_action(rule: AutomationRule, deal):
     if rule.action == AutomationRule.Action.CREATE_TASK:
-        Task.objects.create(
+        task = Task.objects.create(
             organization=deal.organization,
             deal=deal,
             contact=deal.contact,
@@ -19,6 +22,13 @@ def apply_action(rule: AutomationRule, deal):
             title=rule.task_title or rule.name,
             due_at=timezone.now() + datetime.timedelta(hours=rule.task_due_in_hours),
             is_auto_generated=True,
+        )
+        notify(
+            task.assigned_to,
+            f"Автозадача: {task.title}",
+            text=f"По сделке «{deal.title}». Срок — {task.due_at:%d.%m.%Y %H:%M}",
+            url=reverse("task_list"),
+            kind=Notification.Kind.TASK,
         )
     elif rule.action == AutomationRule.Action.MOVE_TO_STAGE and rule.action_target_stage:
         if deal.stage_id != rule.action_target_stage_id:

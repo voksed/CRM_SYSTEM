@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Календарь{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Календарь задач и встреч</h2>
+  <div class="page-header__actions">
+    <a class="btn btn--secondary" href="{% url 'task_list' %}">Списком</a>
+    <a class="btn" href="{% url 'task_create' %}">+ Задача</a>
+  </div>
+</div>
+
+<div class="calendar-toolbar">
+  <a class="btn btn--small btn--secondary" href="?year={{ prev_year }}&month={{ prev_month }}">← Пред.</a>
+  <div class="calendar-toolbar__title">{{ month_name }} {{ year }}</div>
+  <a class="btn btn--small btn--secondary" href="?year={{ next_year }}&month={{ next_month }}">След. →</a>
+</div>
+
+<div class="calendar">
+  <div class="calendar__head">
+    {% for name in weekday_names %}
+    <div class="calendar__weekday">{{ name }}</div>
+    {% endfor %}
+  </div>
+  <div class="calendar__grid">
+    {% for week in weeks %}
+      {% for cell in week %}
+      <div class="calendar__cell{% if not cell.in_month %} calendar__cell--muted{% endif %}{% if cell.is_today %} calendar__cell--today{% endif %}">
+        <div class="calendar__day">{{ cell.day }}</div>
+        <div class="calendar__events">
+          {% for task in cell.tasks %}
+          <a href="{% if task.contact %}{% url 'contact_detail' task.contact.id %}{% else %}{% url 'task_list' %}{% endif %}"
+             class="calendar__event calendar__event--{{ task.task_type }}{% if task.is_done %} calendar__event--done{% endif %}"
+             title="{{ task.due_at|date:'H:i' }} · {{ task.get_task_type_display }}: {{ task.title }}{% if task.contact %} — {{ task.contact }}{% endif %}">
+            <span class="calendar__event-time">{{ task.due_at|date:"H:i" }}</span>
+            {{ task.title }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="calendar-legend">
+  <span class="calendar-legend__item"><i class="dot dot--meeting"></i> Встреча</span>
+  <span class="calendar-legend__item"><i class="dot dot--call"></i> Звонок</span>
+  <span class="calendar-legend__item"><i class="dot dot--invoice"></i> Счёт</span>
+  <span class="calendar-legend__item"><i class="dot dot--follow_up"></i> Напоминание</span>
+  <span class="calendar-legend__item"><i class="dot dot--other"></i> Другое</span>
+</div>
+{% endblock %}

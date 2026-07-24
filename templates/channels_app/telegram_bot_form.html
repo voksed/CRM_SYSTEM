@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_new %}Новый бот{% else %}Настройка бота{% endif %}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="page-header">
+    <h2>{% if is_new %}Новый Telegram-бот{% else %}Настройка бота{% if account.bot_username %} @{{ account.bot_username }}{% endif %}{% endif %}</h2>
+    <a class="btn btn--secondary btn--small" href="{% url 'telegram_settings' %}">← К списку</a>
+  </div>
+
+  <form method="post" class="form">
+    {% csrf_token %}
+
+    <h3>Подключение</h3>
+    {{ form.title.label_tag }} {{ form.title }}
+    {{ form.bot_token.label_tag }} {{ form.bot_token }}
+    {% if form.bot_token.errors %}<div class="field-error">{{ form.bot_token.errors }}</div>{% endif %}
+    <p class="checkbox-row">{{ form.is_active }} {{ form.is_active.label_tag }}</p>
+
+    <h3>Приветствия</h3>
+    <p class="muted" style="font-size:13px;">Оставьте пустым — подставится текст по умолчанию.</p>
+    {{ form.welcome_text.label_tag }} {{ form.welcome_text }}
+    {{ form.help_text_message.label_tag }} {{ form.help_text_message }}
+    {{ form.operator_text.label_tag }} {{ form.operator_text }}
+
+    <h3>Анкета лида</h3>
+    <p class="checkbox-row">{{ form.collect_lead }} {{ form.collect_lead.label_tag }}</p>
+    <p class="muted" style="font-size:13px;">
+      Если включено, бот задаст новому клиенту вопросы по порядку, а ответы сохранит в карточку контакта.
+    </p>
+
+    {{ formset.management_form }}
+    <table class="table lead-questions">
+      <thead>
+        <tr><th style="width:70px">№</th><th>Вопрос</th><th style="width:200px">Куда сохранить</th><th style="width:60px">Удалить</th></tr>
+      </thead>
+      <tbody>
+        {% for qform in formset %}
+        <tr>
+          {{ qform.id }}
+          <td>{{ qform.order }}</td>
+          <td>{{ qform.text }}{% if qform.text.errors %}<div class="field-error">{{ qform.text.errors }}</div>{% endif %}</td>
+          <td>{{ qform.target }}</td>
+          <td class="lead-questions__del">{% if qform.instance.pk %}{{ qform.DELETE }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {{ form.lead_done_text.label_tag }} {{ form.lead_done_text }}
+
+    <div style="margin-top:18px;">
+      <button type="submit" class="btn">Сохранить и проверить</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

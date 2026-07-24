@@ -6,8 +6,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from datetime import timedelta
+
 from audit.models import AuditLog
 from audit.services import get_client_ip, log_action
+from channels_app.models import Activity
 from contacts.models import Contact
 from deals.models import Deal
 from tasks.models import Task
@@ -30,18 +33,43 @@ def dashboard(request):
 
     open_deals_amount = open_deals.aggregate(total=Sum("amount"))["total"] or 0
 
-    my_tasks = Task.objects.filter(
-        organization=org,
-        assigned_to=request.user,
-        is_done=False,
-        due_at__date__lte=timezone.localdate(),
-    ).order_by("due_at")[:10]
+    now = timezone.now()
+    today = timezone.localdate()
+    week_ahead = now + timedelta(days=7)
+
+    my_open_tasks = Task.objects.filter(
+        organization=org, assigned_to=request.user, is_done=False
+    )
+
+    my_tasks = my_open_tasks.filter(due_at__date__lte=today).order_by("due_at")[:10]
+    overdue_count = my_open_tasks.filter(due_at__lt=now).count()
+
+    # ближайшие дедлайны и встречи на неделю вперёд (не считая уже просроченных)
+    upcoming_tasks = (
+        my_open_tasks.filter(due_at__gte=now, due_at__lte=week_ahead)
+        .select_related("contact", "deal")
+        .order_by("due_at")[:6]
+    )
+
+    # лента последних событий общения (звонки, письма, встречи, сообщения)
+    recent_activities = Activity.objects.filter(organization=org).select_related(
+        "contact", "created_by"
+    )
+    if not is_owner(request.user):
+        recent_activities = recent_activities.filter(
+            Q(created_by=request.user) | Q(contact__responsible=request.user)
+        )
+    recent_activities = recent_activities.order_by("-created_at")[:8]
 
     context = {
         "open_deals_count": open_deals.count(),
         "open_deals_amount": open_deals_amount,
         "contacts_count": contacts.count(),
         "my_tasks": my_tasks,
+        "overdue_count": overdue_count,
+        "today_tasks_count": my_open_tasks.filter(due_at__date=today).count(),
+        "upcoming_tasks": upcoming_tasks,
+        "recent_activities": recent_activities,
     }
     return render(request, "dashboard.html", context)
 

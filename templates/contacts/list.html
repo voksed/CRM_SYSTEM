@@ -9,10 +9,18 @@
   <a class="btn" href="{% url 'contact_create' %}">+ Добавить контакт</a>
 </div>
 
+<form class="search-bar" method="get" role="search">
+  <svg class="search-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <input type="search" name="q" value="{{ query }}" placeholder="Поиск по имени, телефону или email…" autocomplete="off">
+  {% if active_status %}<input type="hidden" name="status" value="{{ active_status }}">{% endif %}
+  <button type="submit" class="btn btn--small">Найти</button>
+  {% if query %}<a class="btn btn--small btn--secondary" href="{% url 'contact_list' %}{% if active_status %}?status={{ active_status }}{% endif %}">Сбросить</a>{% endif %}
+</form>
+
 <div class="filters">
-  <a href="{% url 'contact_list' %}" class="{% if not active_status %}filter--active{% endif %}">Все</a>
+  <a href="{% url 'contact_list' %}{% if query %}?q={{ query }}{% endif %}" class="{% if not active_status %}filter--active{% endif %}">Все</a>
   {% for value, label in statuses %}
-  <a href="?status={{ value }}" class="{% if active_status == value %}filter--active{% endif %}">{{ label }}</a>
+  <a href="?status={{ value }}{% if query %}&q={{ query }}{% endif %}" class="{% if active_status == value %}filter--active{% endif %}">{{ label }}</a>
   {% endfor %}
 </div>
 
@@ -21,6 +29,7 @@
   <thead>
     <tr>
       <th>Имя</th>
+      <th>Контакты</th>
       <th>Источник</th>
       <th>Статус</th>
       <th>Ответственный</th>
@@ -35,6 +44,11 @@
           <span class="avatar avatar--sm">{{ contact|initials }}</span>
           {{ contact.full_name }}
         </a>
+      </td>
+      <td class="table__contacts">
+        {% if contact.phone %}<a href="tel:{{ contact.phone }}">{{ contact.phone }}</a>{% endif %}
+        {% if contact.email %}<span class="muted">{{ contact.email }}</span>{% endif %}
+        {% if not contact.phone and not contact.email %}<span class="muted">—</span>{% endif %}
       </td>
       <td>{{ contact.get_source_display }}</td>
       <td><span class="status-pill status-pill--{{ contact.status }}">{{ contact.get_status_display }}</span></td>
@@ -64,7 +78,7 @@
 {% else %}
 <div class="empty-state">
   <svg class="empty-state__icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
-  <div class="empty-state__text">Контактов пока нет — добавь первый.</div>
+  <div class="empty-state__text">{% if query or active_status %}По заданным условиям ничего не найдено.{% else %}Контактов пока нет — добавь первый.{% endif %}</div>
 </div>
 {% endif %}
 {% endblock %}

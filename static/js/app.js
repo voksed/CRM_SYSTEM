@@ -177,15 +177,34 @@ function initKanban() {
       if (!card) return;
 
       const stageId = zone.dataset.stageId;
+      const sourceZone = card.closest(".js-kanban-dropzone");
       try {
         await postJSON(`/deals/${dealId}/move/`, { stage_id: stageId });
         zone.appendChild(card);
+        refreshEmptyPlaceholder(zone);
+        if (sourceZone && sourceZone !== zone) refreshEmptyPlaceholder(sourceZone);
         updateColumnCounts();
       } catch (err) {
         alert("Не удалось перенести сделку. Попробуйте ещё раз.");
       }
     });
   });
+}
+
+// Показывает/прячет заглушку «Пусто» в колонке в зависимости от того, есть ли
+// в ней карточки — чтобы после перетаскивания не оставалось «Пусто» рядом с
+// картой и наоборот.
+function refreshEmptyPlaceholder(zone) {
+  const hasCards = zone.querySelector(".kanban-card");
+  let empty = zone.querySelector(".kanban-column__empty");
+  if (hasCards && empty) {
+    empty.remove();
+  } else if (!hasCards && !empty) {
+    empty = document.createElement("div");
+    empty.className = "kanban-column__empty";
+    empty.textContent = "Пусто";
+    zone.appendChild(empty);
+  }
 }
 
 function updateColumnCounts() {
@@ -220,41 +239,118 @@ function initTelegramChat() {
   const contactId = chat.dataset.contactId;
   let lastId = parseInt(chat.dataset.lastId, 10) || 0;
 
-  async function poll() {
-    let response;
-    try {
-      response = await fetch(`/contacts/${contactId}/telegram/messages.json?after_id=${lastId}`);
-    } catch (err) {
-      return;
-    }
-    if (!response.ok) return;
-
-    const data = await response.json();
-    if (!data.messages.length) return;
+  function appendMessage(message) {
+    if (chat.querySelector(`[data-msg-id="${message.id}"]`)) return;
 
     const emptyHint = document.getElementById("js-chat-empty");
     if (emptyHint) emptyHint.remove();
 
-    data.messages.forEach((message) => {
-      const bubble = document.createElement("div");
-      bubble.className = `chat__bubble chat__bubble--${message.direction}`;
+    const bubble = document.createElement("div");
+    bubble.className = `chat__bubble chat__bubble--${message.direction}`;
+    if (message.failed) bubble.classList.add("chat__bubble--failed");
+    bubble.dataset.msgId = message.id;
 
-      const text = document.createElement("div");
-      text.className = "chat__text";
-      text.textContent = message.text;
+    const text = document.createElement("div");
+    text.className = "chat__text";
+    text.textContent = message.text;
+    bubble.appendChild(text);
 
-      const time = document.createElement("div");
-      time.className = "chat__time";
-      time.textContent = message.created_at;
+    if (message.failed) {
+      const err = document.createElement("div");
+      err.className = "chat__error";
+      err.textContent = "⚠ Не доставлено" + (message.error ? ": " + message.error : "");
+      bubble.appendChild(err);
+    }
 
-      bubble.appendChild(text);
-      bubble.appendChild(time);
-      chat.appendChild(bubble);
-      lastId = message.id;
-    });
+    const time = document.createElement("div");
+    time.className = "chat__time";
+    time.textContent = message.created_at;
+    bubble.appendChild(time);
 
+    chat.appendChild(bubble);
+    if (message.id > lastId) lastId = message.id;
     chat.scrollTop = chat.scrollHeight;
   }
 
-  setInterval(poll, 6000);
+  // Догоняем сообщения, пришедшие между рендером страницы и открытием сокета.
+  async function catchUp() {
+    try {
+      const response = await fetch(
+        `/contacts/${contactId}/telegram/messages.json?after_id=${lastId}`
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      data.messages.forEach(appendMessage);
+    } catch (err) {
+      /* нет сети — сокет всё равно попробует */
+    }
+  }
+
+  // --- Отправка ответа менеджера через сокет ---
+  const form = document.querySelector(".chat__form");
+  const input = form ? form.querySelector('[name="text"]') : null;
+  let socket = null;
+
+  if (form && input) {
+    form.addEventListener("submit", (event) => {
+      if (socket && socket.readyState === WebSocket.OPEN && input.value.trim()) {
+        event.preventDefault();
+        socket.send(JSON.stringify({ text: input.value }));
+        input.value = "";
+        input.focus();
+      }
+      // иначе — обычная отправка формой (fallback без сокета)
+    });
+  }
+
+  // --- WebSocket с автопереподключением; polling — только если WS недоступен ---
+  const wsProto = location.protocol === "https:" ? "wss" : "ws";
+  const wsUrl = `${wsProto}://${location.host}/ws/contacts/${contactId}/chat/`;
+  let reconnectDelay = 2000;
+  let pollTimer = null;
+
+  function startPollingFallback() {
+    if (pollTimer) return;
+    pollTimer = setInterval(catchUp, 6000);
+  }
+
+  function connect() {
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (err) {
+      startPollingFallback();
+      return;
+    }
+
+    ws.addEventListener("open", () => {
+      socket = ws;
+      reconnectDelay = 2000;
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+      catchUp();
+    });
+
+    ws.addEventListener("message", (event) => {
+      try {
+        appendMessage(JSON.parse(event.data));
+      } catch (err) {
+        /* пропускаем некорректный кадр */
+      }
+    });
+
+    ws.addEventListener("close", () => {
+      socket = null;
+      // временный фолбэк на polling, пока переподключаемся
+      startPollingFallback();
+      setTimeout(connect, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+    });
+
+    ws.addEventListener("error", () => ws.close());
+  }
+
+  connect();
 }
