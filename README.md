@@ -1,5 +1,7 @@
 # CRM System
 
+**English** · [Русский](README.ru.md)
+
 **Django + vanilla JS/CSS open-source CRM for the CIS market** — contacts, a Kanban deals pipeline, tasks, billing, role-based access, an automation engine, Telegram integration, and full audit logging. No frontend framework, no build step, no bloat.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
