@@ -31,7 +31,7 @@ def deal_billing(request, deal_id):
                 AuditLog.Action.CREATED,
                 obj=payment,
                 model_name="Оплата",
-                object_repr=f"{payment.amount} ₽ по сделке «{deal.title}»",
+                object_repr=f"{payment.amount} сум по сделке «{deal.title}»",
                 ip_address=get_client_ip(request),
             )
             return redirect("deal_billing", deal_id=deal.id)

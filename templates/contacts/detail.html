@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load accounts_extras %}
 
 {% block title %}{{ contact.full_name }}{% endblock %}
 
@@ -35,7 +36,7 @@
     <h3>Сделки</h3>
     <ul class="plain-list">
       {% for deal in deals %}
-      <li><a href="{% url 'deal_billing' deal.id %}">{{ deal.title }}</a> — {{ deal.stage.name }} ({{ deal.amount }} ₽)</li>
+      <li><a href="{% url 'deal_billing' deal.id %}">{{ deal.title }}</a> — {{ deal.stage.name }} ({{ deal.amount|money }} сум)</li>
       {% empty %}
       <li class="muted">Сделок пока нет.</li>
       {% endfor %}

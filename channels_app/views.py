@@ -70,7 +70,19 @@ def telegram_bot_form(request, account_id=None):
             candidate = form.save(commit=False)
             candidate.organization = org
             token_changed = "bot_token" in form.changed_data or not account.pk
+            duplicate = (
+                TelegramAccount.objects.filter(
+                    organization=org, bot_token=candidate.bot_token
+                )
+                .exclude(pk=account.pk)
+                .exists()
+            )
             try:
+                if duplicate:
+                    raise ChannelNotConnected(
+                        "Бот с таким токеном уже добавлен. Отредактируйте "
+                        "существующего бота вместо создания нового."
+                    )
                 if token_changed or not candidate.bot_username:
                     candidate.bot_username = verify_bot_token(candidate.bot_token)
                     register_bot_commands(candidate.bot_token)

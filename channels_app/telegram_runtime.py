@@ -161,12 +161,27 @@ def _advance_form(account, activity, text, created):
 # --- Диспетчер и обработчики ---------------------------------------------------
 
 
-def build_dispatcher(token_to_account: dict) -> Dispatcher:
+def _get_account(account_id):
+    """Свежая версия аккаунта из БД — чтобы правки настроек (анкета,
+    приветствия) применялись без перезапуска сервера."""
+    if account_id is None:
+        return None
+    return (
+        TelegramAccount.objects.select_related("organization")
+        .filter(pk=account_id, is_active=True)
+        .first()
+    )
+
+
+def build_dispatcher(token_to_account_id: dict) -> Dispatcher:
     dp = Dispatcher()
+
+    async def account_for(bot):
+        return await sync_to_async(_get_account)(token_to_account_id.get(bot.token))
 
     @dp.message(CommandStart())
     async def handle_start(message: Message, bot: Bot):
-        account = token_to_account.get(bot.token)
+        account = await account_for(bot)
         if account is None:
             return
         activity, _ = await sync_to_async(receive_telegram_message)(
@@ -180,12 +195,12 @@ def build_dispatcher(token_to_account: dict) -> Dispatcher:
 
     @dp.message(CommandFilter("help"))
     async def handle_help(message: Message, bot: Bot):
-        account = token_to_account.get(bot.token)
+        account = await account_for(bot)
         await message.answer(account.help_message if account else "")
 
     @dp.message(CommandFilter("operator"))
     async def handle_operator(message: Message, bot: Bot):
-        account = token_to_account.get(bot.token)
+        account = await account_for(bot)
         if account is None:
             return
         activity, _ = await sync_to_async(receive_telegram_message)(
@@ -198,7 +213,7 @@ def build_dispatcher(token_to_account: dict) -> Dispatcher:
 
     @dp.message(F.text)
     async def handle_message(message: Message, bot: Bot):
-        account = token_to_account.get(bot.token)
+        account = await account_for(bot)
         if account is None:
             return
         activity, created = await sync_to_async(receive_telegram_message)(
@@ -216,17 +231,26 @@ async def _build_bots():
     accounts = await sync_to_async(list)(
         TelegramAccount.objects.filter(is_active=True).select_related("organization")
     )
-    bots = []
-    token_to_account = {}
+    # Один опрос на токен: если по ошибке заведено несколько ботов с одним
+    # токеном, берём тот, у кого включена анкета (иначе — первый). Это
+    # предотвращает конфликт getUpdates от двух поллеров одного бота.
+    by_token = {}
     for account in accounts:
-        bot = Bot(token=account.bot_token)
+        existing = by_token.get(account.bot_token)
+        if existing is None or (account.collect_lead and not existing.collect_lead):
+            by_token[account.bot_token] = account
+
+    bots = []
+    token_to_account_id = {}
+    for token, account in by_token.items():
+        bot = Bot(token=token)
         try:
             await bot.set_my_commands(BOT_COMMANDS)
         except Exception as exc:  # noqa: BLE001 — не валим запуск из-за одного бота
             logger.warning("Не удалось зарегистрировать команды бота: %s", exc)
         bots.append(bot)
-        token_to_account[account.bot_token] = account
-    return bots, token_to_account
+        token_to_account_id[token] = account.id
+    return bots, token_to_account_id
 
 
 class TelegramBotRuntime:
@@ -239,11 +263,11 @@ class TelegramBotRuntime:
         self._bots = []
 
     async def start(self):
-        self._bots, token_to_account = await _build_bots()
+        self._bots, token_to_account_id = await _build_bots()
         if not self._bots:
             logger.info("Нет активных Telegram-аккаунтов — бот не запущен.")
             return
-        self._dp = build_dispatcher(token_to_account)
+        self._dp = build_dispatcher(token_to_account_id)
         self._task = asyncio.create_task(
             self._dp.start_polling(*self._bots, handle_signals=False)
         )

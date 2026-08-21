@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load accounts_extras %}
 
 {% block title %}Счёт{% endblock %}
 
 {% block content %}
 <h2>Счёт на оплату</h2>
 <p>{{ invoice.deal.title }}</p>
-<p class="card__value">{{ invoice.amount }} ₽</p>
+<p class="card__value">{{ invoice.amount|money }} сум</p>
 <p>Статус: {{ invoice.get_status_display }}</p>
 
 {% if invoice.status == "unpaid" %}

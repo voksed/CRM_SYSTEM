@@ -1,12 +1,13 @@
 {% extends "base.html" %}
+{% load accounts_extras %}
 
 {% block title %}Оплата — {{ deal.title }}{% endblock %}
 
 {% block content %}
 <h2>{{ deal.title }}</h2>
-<p>Сумма сделки: {{ deal.amount }} ₽ ·
+<p>Сумма сделки: {{ deal.amount|money }} сум ·
   <span class="{% if balance > 0 %}balance--debt{% else %}balance--ok{% endif %}">
-    {% if balance > 0 %}Остаток: {{ balance }} ₽{% else %}Оплачено полностью{% endif %}
+    {% if balance > 0 %}Остаток: {{ balance|money }} сум{% else %}Оплачено полностью{% endif %}
   </span>
 </p>
 
@@ -21,7 +22,7 @@
   <tbody>
     {% for invoice in invoices %}
     <tr>
-      <td>{{ invoice.amount }} ₽</td>
+      <td>{{ invoice.amount|money }} сум</td>
       <td>{{ invoice.get_status_display }}</td>
       <td><a href="{% url 'invoice_public' invoice.public_token %}">открыть</a></td>
     </tr>
@@ -45,7 +46,7 @@
     {% for payment in payments %}
     <tr>
       <td>{{ payment.paid_at|date:"d.m.Y H:i" }}</td>
-      <td>{{ payment.amount }} ₽</td>
+      <td>{{ payment.amount|money }} сум</td>
       <td>{{ payment.get_method_display }}</td>
       <td>{{ payment.comment }}</td>
     </tr>

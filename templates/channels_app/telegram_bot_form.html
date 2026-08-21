@@ -9,46 +9,76 @@
     <a class="btn btn--secondary btn--small" href="{% url 'telegram_settings' %}">← К списку</a>
   </div>
 
+  <div class="hint-box">
+    Здесь настраивается один Telegram-бот: его токен, тексты приветствий и анкета,
+    которую бот задаёт новому клиенту. Правки приветствий и анкеты применяются
+    сразу. Новый бот (новый токен) начнёт принимать сообщения после перезапуска
+    сервера.
+  </div>
+
   <form method="post" class="form">
     {% csrf_token %}
 
-    <h3>Подключение</h3>
-    {{ form.title.label_tag }} {{ form.title }}
-    {{ form.bot_token.label_tag }} {{ form.bot_token }}
-    {% if form.bot_token.errors %}<div class="field-error">{{ form.bot_token.errors }}</div>{% endif %}
-    <p class="checkbox-row">{{ form.is_active }} {{ form.is_active.label_tag }}</p>
-
-    <h3>Приветствия</h3>
-    <p class="muted" style="font-size:13px;">Оставьте пустым — подставится текст по умолчанию.</p>
-    {{ form.welcome_text.label_tag }} {{ form.welcome_text }}
-    {{ form.help_text_message.label_tag }} {{ form.help_text_message }}
-    {{ form.operator_text.label_tag }} {{ form.operator_text }}
-
-    <h3>Анкета лида</h3>
-    <p class="checkbox-row">{{ form.collect_lead }} {{ form.collect_lead.label_tag }}</p>
-    <p class="muted" style="font-size:13px;">
-      Если включено, бот задаст новому клиенту вопросы по порядку, а ответы сохранит в карточку контакта.
+    <h3>1. Подключение</h3>
+    <p class="field">
+      {{ form.title.label_tag }}
+      {{ form.title }}
+      <span class="field__hint">Внутреннее название, чтобы отличать ботов в списке. Клиент его не видит.</span>
     </p>
+    <p class="field">
+      {{ form.bot_token.label_tag }}
+      {{ form.bot_token }}
+      <span class="field__hint">Токен из <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> (команда <code>/newbot</code>). У каждого бота — свой уникальный токен.</span>
+      {% if form.bot_token.errors %}<span class="field-error">{{ form.bot_token.errors|striptags }}</span>{% endif %}
+    </p>
+    <p class="checkbox-row">{{ form.is_active }} {{ form.is_active.label_tag }}
+      <span class="field__hint">Выключите, чтобы временно остановить бота, не удаляя его.</span>
+    </p>
+
+    <h3>2. Приветствия</h3>
+    <p class="muted" style="font-size:13px;">Что бот отвечает на команды. Оставьте поле пустым — подставится текст по умолчанию.</p>
+    <p class="field">{{ form.welcome_text.label_tag }} {{ form.welcome_text }}
+      <span class="field__hint">Первое сообщение, когда клиент нажимает «Начать» или пишет /start.</span>
+    </p>
+    <p class="field">{{ form.help_text_message.label_tag }} {{ form.help_text_message }}</p>
+    <p class="field">{{ form.operator_text.label_tag }} {{ form.operator_text }}</p>
+
+    <h3>3. Анкета для нового клиента</h3>
+    <p class="checkbox-row">{{ form.collect_lead }} {{ form.collect_lead.label_tag }}</p>
+    <div class="hint-box hint-box--soft">
+      Как это работает: когда клиент впервые пишет боту (или нажимает /start),
+      бот по очереди задаёт вопросы из таблицы ниже. Ответы автоматически
+      сохраняются в карточку контакта. Например, вопрос «Как вас зовут?» с типом
+      «Имя клиента» — ответ станет именем контакта.
+    </div>
 
     {{ formset.management_form }}
     <table class="table lead-questions">
       <thead>
-        <tr><th style="width:70px">№</th><th>Вопрос</th><th style="width:200px">Куда сохранить</th><th style="width:60px">Удалить</th></tr>
+        <tr>
+          <th style="width:64px" title="Порядок вопросов: 1, 2, 3…">№</th>
+          <th>Вопрос, который задаст бот</th>
+          <th style="width:210px">Куда сохранить ответ</th>
+          <th style="width:64px">Убрать</th>
+        </tr>
       </thead>
       <tbody>
         {% for qform in formset %}
         <tr>
           {{ qform.id }}
           <td>{{ qform.order }}</td>
-          <td>{{ qform.text }}{% if qform.text.errors %}<div class="field-error">{{ qform.text.errors }}</div>{% endif %}</td>
+          <td>{{ qform.text }}{% if qform.text.errors %}<div class="field-error">{{ qform.text.errors|striptags }}</div>{% endif %}</td>
           <td>{{ qform.target }}</td>
           <td class="lead-questions__del">{% if qform.instance.pk %}{{ qform.DELETE }}{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+    <p class="field__hint" style="margin-top:2px;">Пронумеруйте вопросы (1, 2, 3…) — в этом порядке бот их задаст. Пустые строки игнорируются. Чтобы добавить ещё вопросы, сохраните — появятся новые пустые строки.</p>
 
-    {{ form.lead_done_text.label_tag }} {{ form.lead_done_text }}
+    <p class="field" style="margin-top:14px;">{{ form.lead_done_text.label_tag }} {{ form.lead_done_text }}
+      <span class="field__hint">Что бот пишет клиенту после последнего вопроса.</span>
+    </p>
 
     <div style="margin-top:18px;">
       <button type="submit" class="btn">Сохранить и проверить</button>

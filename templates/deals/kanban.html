@@ -28,7 +28,7 @@
           <span class="avatar avatar--sm">{{ deal.contact|initials }}</span>
           <a href="{% url 'contact_detail' deal.contact.id %}">{{ deal.contact.full_name }}</a>
         </div>
-        <div class="kanban-card__amount">{{ deal.amount }} ₽</div>
+        <div class="kanban-card__amount">{{ deal.amount|money }} сум</div>
       </div>
       {% empty %}
       <div class="kanban-column__empty">Пусто</div>

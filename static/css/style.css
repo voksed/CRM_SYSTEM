@@ -1,34 +1,35 @@
 :root {
-  --bg: #f8fafc;
+  --bg: #fafafa;
   --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  --text: #0f172a;
-  --text-secondary: #475569;
-  --muted: #94a3b8;
-  --primary: #2563eb;
-  --primary-hover: #1e40af;
-  --primary-soft: #dbeafe;
-  --secondary: #0891b2;
-  --secondary-soft: #cffafe;
-  --border: #e2e8f0;
+  --surface-hover: #f4f4f5;
+  --text: #09090b;
+  --text-secondary: #52525b;
+  --muted: #a1a1aa;
+  --primary: #18181b;
+  --primary-hover: #000000;
+  --primary-soft: #e4e4e7;
+  --secondary: #52525b;
+  --secondary-soft: #e4e4e7;
+  --border: #e4e4e7;
   --danger: #dc2626;
   --danger-soft: #fee2e2;
   --success: #16a34a;
   --success-soft: #dcfce7;
   --warning: #b45309;
   --warning-soft: #fef3c7;
+  --btn-text: #ffffff;
   --radius-sm: 7px;
   --radius: 11px;
   --radius-lg: 16px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.04);
-  --shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.12);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.04);
+  --shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.14);
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  --sidebar-bg: #0f172a;
-  --sidebar-bg-active: #1e293b;
-  --sidebar-text: #cbd5e1;
-  --sidebar-text-muted: #64748b;
-  --sidebar-border: #1e293b;
+  --sidebar-bg: #09090b;
+  --sidebar-bg-active: #1c1c1f;
+  --sidebar-text: #d4d4d8;
+  --sidebar-text-muted: #71717a;
+  --sidebar-border: #27272a;
   --sidebar-width: 230px;
 }
 
@@ -191,7 +192,7 @@ a {
   height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff;
+  color: var(--btn-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -516,7 +517,7 @@ button {
   border-radius: var(--radius-sm);
   padding: 8px 16px;
   background: var(--primary);
-  color: #fff;
+  color: var(--btn-text);
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
@@ -549,6 +550,7 @@ button {
 
 .btn--danger {
   background: var(--danger);
+  color: #fff;
 }
 
 .btn--danger:hover {
@@ -875,7 +877,7 @@ button {
 }
 
 .filters a.filter--active {
-  color: #fff;
+  color: var(--btn-text);
   background: var(--primary);
   border-color: var(--primary);
   font-weight: 600;
@@ -1056,7 +1058,7 @@ button {
 .chat__bubble--out {
   align-self: flex-end;
   background: var(--primary);
-  color: #fff;
+  color: var(--btn-text);
   border-bottom-right-radius: 3px;
 }
 
@@ -1073,7 +1075,8 @@ button {
 }
 
 .chat__bubble--out .chat__time {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--btn-text);
+  opacity: 0.7;
 }
 
 .chat__form {
@@ -1104,9 +1107,11 @@ button {
 .kanban {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(230px, 1fr);
+  /* все этапы делят ширину поровну и помещаются в одну линию без прокрутки;
+     minmax(0, …) позволяет колонкам сжиматься, чтобы влезли любые 5–7 этапов */
+  grid-auto-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 14px;
+  gap: 12px;
   overflow-x: auto;
   padding-bottom: 14px;
   scrollbar-width: thin;
@@ -1175,9 +1180,20 @@ button {
   flex-direction: column;
   gap: 8px;
   min-height: 92px;
+  /* при большом числе карточек колонка не растягивает страницу, а
+     прокручивается внутри себя — так помещаются хоть 100, хоть 200 сделок */
+  max-height: calc(100vh - 235px);
+  overflow-y: auto;
   background: var(--bg);
   border-radius: 0 0 var(--radius) var(--radius);
   transition: background 0.15s;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.kanban-column__body::-webkit-scrollbar { width: 7px; }
+.kanban-column__body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
 }
 
 .kanban-column__body--over {
@@ -1297,76 +1313,83 @@ button {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a0f1c;
-    --surface: #151d30;
-    --surface-hover: #1e2740;
-    --text: #f1f5f9;
-    --text-secondary: #aab4c8;
-    --muted: #7482a0;
-    --primary: #3b82f6;
-    --primary-hover: #60a5fa;
-    --primary-soft: #16294f;
-    --secondary: #38bdf8;
-    --secondary-soft: #123a4d;
-    --border: #2b3654;
-    --danger-soft: #451a24;
-    --success-soft: #124a2e;
-    --warning-soft: #4a3510;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.55);
-    --sidebar-bg: #0c1428;
-    --sidebar-bg-active: #1b2748;
-    --sidebar-border: #1b2748;
+  :root:not([data-theme="light"]) {
+    --bg: #0a0a0a;
+    --surface: #161618;
+    --surface-hover: #232326;
+    --text: #fafafa;
+    --text-secondary: #a1a1aa;
+    --muted: #71717a;
+    --primary: #ededef;
+    --primary-hover: #ffffff;
+    --primary-soft: #27272a;
+    --secondary: #a1a1aa;
+    --secondary-soft: #27272a;
+    --border: #2a2a2e;
+    --danger-soft: #3a1a1a;
+    --success-soft: #14351f;
+    --warning-soft: #3a2c10;
+    --btn-text: #18181b;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.6);
+    --sidebar-bg: #050505;
+    --sidebar-bg-active: #1c1c1f;
+    --sidebar-text: #d4d4d8;
+    --sidebar-text-muted: #71717a;
+    --sidebar-border: #1f1f22;
   }
 }
 
 /* Manual theme override (wins over prefers-color-scheme regardless of source order) */
 
 :root[data-theme="dark"] {
-  --bg: #0a0f1c;
-  --surface: #151d30;
-  --surface-hover: #1e2740;
-  --text: #f1f5f9;
-  --text-secondary: #aab4c8;
-  --muted: #7482a0;
-  --primary: #3b82f6;
-  --primary-hover: #60a5fa;
-  --primary-soft: #16294f;
-  --secondary: #38bdf8;
-  --secondary-soft: #123a4d;
-  --border: #2b3654;
-  --danger-soft: #451a24;
-  --success-soft: #124a2e;
-  --warning-soft: #4a3510;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.55);
-  --sidebar-bg: #0c1428;
-  --sidebar-bg-active: #1b2748;
-  --sidebar-border: #1b2748;
+  --bg: #0a0a0a;
+  --surface: #161618;
+  --surface-hover: #232326;
+  --text: #fafafa;
+  --text-secondary: #a1a1aa;
+  --muted: #71717a;
+  --primary: #ededef;
+  --primary-hover: #ffffff;
+  --primary-soft: #27272a;
+  --secondary: #a1a1aa;
+  --secondary-soft: #27272a;
+  --border: #2a2a2e;
+  --danger-soft: #3a1a1a;
+  --success-soft: #14351f;
+  --warning-soft: #3a2c10;
+  --btn-text: #18181b;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.6);
+  --sidebar-bg: #050505;
+  --sidebar-bg-active: #1c1c1f;
+  --sidebar-text: #d4d4d8;
+  --sidebar-text-muted: #71717a;
+  --sidebar-border: #1f1f22;
 }
 
 :root[data-theme="light"] {
-  --bg: #f8fafc;
+  --bg: #fafafa;
   --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  --text: #0f172a;
-  --text-secondary: #475569;
-  --muted: #94a3b8;
-  --primary: #2563eb;
-  --primary-hover: #1e40af;
-  --primary-soft: #dbeafe;
-  --secondary: #0ea5e9;
-  --secondary-soft: #e0f2fe;
-  --border: #e2e8f0;
-  --danger-soft: #fef2f2;
-  --success-soft: #f0fdf4;
-  --warning-soft: #fffbeb;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.04);
-  --shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.12);
-  --sidebar-bg: #0f172a;
-  --sidebar-bg-active: #1e293b;
-  --sidebar-border: #1e293b;
+  --surface-hover: #f4f4f5;
+  --text: #09090b;
+  --text-secondary: #52525b;
+  --muted: #a1a1aa;
+  --primary: #18181b;
+  --primary-hover: #000000;
+  --primary-soft: #e4e4e7;
+  --secondary: #52525b;
+  --secondary-soft: #e4e4e7;
+  --border: #e4e4e7;
+  --danger-soft: #fee2e2;
+  --success-soft: #dcfce7;
+  --warning-soft: #fef3c7;
+  --btn-text: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.04);
+  --shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.14);
+  --sidebar-bg: #09090b;
+  --sidebar-bg-active: #1c1c1f;
+  --sidebar-border: #27272a;
 }
 
 /* ============================================================
@@ -1750,3 +1773,33 @@ button {
   margin-top: 5px;
   line-height: 1.35;
 }
+
+/* Подсказки и инфо-блоки в формах настроек */
+.hint-box {
+  background: var(--primary-soft);
+  color: var(--text-secondary);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0 0 18px;
+}
+.hint-box--soft {
+  background: var(--surface-hover);
+  border-left-color: var(--secondary);
+  margin: 8px 0 12px;
+}
+.field { margin: 0 0 14px; }
+.field__hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: 3px;
+}
+.checkbox-row .field__hint {
+  flex-basis: 100%;
+  margin-left: 24px;
+  margin-top: 2px;
+}
+.lead-questions th { font-size: 12px; }

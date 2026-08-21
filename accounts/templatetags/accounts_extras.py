@@ -1,6 +1,22 @@
+from decimal import Decimal, InvalidOperation
+
 from django import template
 
 register = template.Library()
+
+
+@register.filter
+def money(value):
+    """Форматирует сумму с пробелом-разделителем разрядов: 1 000 000.
+    Целые суммы — без копеек, дробные — с двумя знаками через запятую."""
+    try:
+        amount = Decimal(str(value))
+    except (TypeError, ValueError, InvalidOperation):
+        return value
+    if amount == amount.to_integral_value():
+        return f"{int(amount):,}".replace(",", " ")
+    formatted = f"{amount:,.2f}".replace(",", " ").replace(".", ",")
+    return formatted
 
 
 @register.filter

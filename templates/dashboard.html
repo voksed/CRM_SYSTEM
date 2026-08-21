@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load accounts_extras %}
 
 {% block title %}Дашборд{% endblock %}
 
@@ -9,7 +10,7 @@
     <span class="card__label">сделок в работе</span>
   </div>
   <div class="card card--secondary">
-    <span class="card__value">{{ open_deals_amount }} ₽</span>
+    <span class="card__value">{{ open_deals_amount|money }} сум</span>
     <span class="card__label">потенциальная выручка</span>
   </div>
   <div class="card card--success">
